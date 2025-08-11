@@ -1,0 +1,48 @@
+/*
+ * =================================================================
+ * Scrollbar Kustom untuk Browser Berbasis Webkit (Chrome, Safari, Edge)
+ * =================================================================
+ */
+
+/* Mengatur lebar dan tinggi dari scrollbar */
+::-webkit-scrollbar {
+  width: 10px; /* Lebar untuk scrollbar vertikal */
+  height: 10px; /* Tinggi untuk scrollbar horizontal */
+}
+
+/* Bagian track (latar belakang dari scrollbar) */
+::-webkit-scrollbar-track {
+  background-color: #f1f5f9; /* Warna slate-100 untuk Light Mode */
+  border-radius: 10px;
+}
+
+/* Bagian thumb (handle yang bisa digeser) */
+::-webkit-scrollbar-thumb {
+  background-color: #94a3b8; /* Warna slate-400 untuk Light Mode */
+  border-radius: 10px;
+  /* Memberi sedikit padding di sekitar thumb agar tidak menempel ke track */
+  border: 2px solid #f1f5f9;
+}
+
+/* Mengubah warna thumb saat kursor mouse berada di atasnya */
+::-webkit-scrollbar-thumb:hover {
+  background-color: #64748b; /* Warna slate-500 */
+}
+
+/* * =================================================================
+ * Style Kustom untuk Dark Mode
+ * =================================================================
+ */
+
+.dark ::-webkit-scrollbar-track {
+  background-color: #1e293b; /* Warna slate-800 untuk Dark Mode */
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background-color: #475569; /* Warna slate-600 untuk Dark Mode */
+  border-color: #1e293b; /* Menyesuaikan padding dengan latar Dark Mode */
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: #64748b; /* Warna slate-500, bisa sama atau beda */
+}
