@@ -14,8 +14,7 @@ export type WABlastMessageType = "text" | "media";
  */
 export interface RandomMessageOption {
   content: string;
-  selected: boolean; // Apakah pesan ini akan dipertimbangkan untuk   storedMessageId?: string;
-  storedMessageId?: string;
+  selected: boolean; // Apakah pesan ini akan dipertimbangkan untuk pengiriman acak
 }
 
 /**

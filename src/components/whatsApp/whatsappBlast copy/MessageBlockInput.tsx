@@ -339,20 +339,12 @@ const MessageBlockInput: React.FC<MessageBlockInputProps> = ({
           ...block,
           randomMessageOptions: [
             ...(block.randomMessageOptions || []),
-            {
-              content: selectedMessage.content,
-              selected: true,
-              storedMessageId: selectedMessage.id,
-            },
+            { content: selectedMessage.content, selected: true },
           ],
         });
       } else {
         // Otherwise, load into textMessage
-        onUpdate(index, {
-          ...block,
-          textMessage: selectedMessage.content,
-          storedMessageId: selectedMessage.id,
-        });
+        onUpdate(index, { ...block, textMessage: selectedMessage.content });
       }
       toast.info(`Pesan '${selectedMessage.name}' dimuat.`);
     }

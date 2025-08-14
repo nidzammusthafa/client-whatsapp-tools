@@ -433,7 +433,13 @@ const StoredMessageManagement: React.FC = () => {
                   className="flex items-center justify-between p-3 border rounded-md bg-background"
                 >
                   <div>
-                    <p className="font-semibold">{message.name}</p>
+                    <p className="font-medium">
+                      {message.name}
+                      {/* nilai poin pesan */}
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        ({message.points} poin)
+                      </span>
+                    </p>
                     <p className="text-sm text-muted-foreground line-clamp-2">
                       {message.content}
                     </p>
