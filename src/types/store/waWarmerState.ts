@@ -4,12 +4,14 @@ import {
 } from "../whatsapp/warmer";
 
 export interface WaWarmerState {
+  waWarmerJobs: Record<string, WarmerProgressUpdate>;
   warmerJobStatus: WarmerProgressUpdate | null;
   warmerMessagesLog: WarmerMessageLogEntry[];
   currentWarmerJobId: string;
 }
 
 export interface WaWarmerActions {
+  setWaWarmerJobs: (jobs: Record<string, WarmerProgressUpdate>) => void;
   setWarmerJobStatus: (status: WarmerProgressUpdate | null) => void;
   addWarmerMessageLogEntry: (entry: WarmerMessageLogEntry) => void;
   resetWarmerMessagesLog: () => void;

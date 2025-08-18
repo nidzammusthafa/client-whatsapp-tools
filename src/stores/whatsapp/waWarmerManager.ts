@@ -16,12 +16,12 @@ export const createWaWarmerManagerSlice: StateCreator<
   [],
   WaWarmerState & WaWarmerActions
 > = (set, get) => ({
-  // Initial State for WhatsApp Warmer
+  waWarmerJobs: {},
   warmerJobStatus: null,
   warmerMessagesLog: [],
   currentWarmerJobId: uuidv4(),
 
-  // Actions for WhatsApp Warmer
+  setWaWarmerJobs: (jobs) => set({ waWarmerJobs: jobs }),
   setWarmerJobStatus: (status) => set({ warmerJobStatus: status }),
   addWarmerMessageLogEntry: (entry) =>
     set((state) => ({
@@ -65,7 +65,7 @@ export const createWaWarmerManagerSlice: StateCreator<
       jobId: state.currentWarmerJobId,
       currentMessages: 0,
       totalMessages: totalMessages,
-      status: "running",
+      status: "RUNNING",
       message: "Memulai pemanasan akun...",
       sentMessagesLog: [], // Inisialisasi kosong di frontend
     });

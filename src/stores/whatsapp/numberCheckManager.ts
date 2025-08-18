@@ -109,7 +109,7 @@ export const createNumberCheckManagerSlice: StateCreator<
       jobId: jobId,
       current: 0,
       total: excelData.length,
-      status: "running",
+      status: "RUNNING",
       message: "Memulai pengecekan...",
     });
   },

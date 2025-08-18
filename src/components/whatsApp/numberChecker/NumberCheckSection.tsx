@@ -1,16 +1,8 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { Input } from "@/components/ui/input";
+import React, { useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Pause,
-  Play,
-  StopCircle,
-  Trash2,
-  RefreshCcw,
-  PlusCircle,
-} from "lucide-react"; // Import ikon baru
+import { Pause, Play, StopCircle } from "lucide-react";
 import { UploadZone } from "@/components/UploadZone";
 import {
   Select,
@@ -23,9 +15,8 @@ import DataTable from "./data-table"; // Impor komponen DataTable
 import { toast } from "sonner";
 import { ExcelRow } from "@/types";
 import { useWhatsAppStore } from "@/stores/whatsapp";
-import { v4 as uuidv4 } from "uuid"; // Untuk menghasilkan ID unik
-
-// Deklarasi global untuk library XLSX yang dimuat dari CDN
+import { JobIdManagement } from "./JobIdManagement";
+import { DelayConfiguration } from "./DelayConfiguration";
 declare const XLSX: typeof import("xlsx");
 
 const NumberCheckSection: React.FC = () => {
@@ -38,11 +29,8 @@ const NumberCheckSection: React.FC = () => {
     selectedPhoneNumberColumn,
     setSelectedPhoneNumberColumn,
     minDelay,
-    setMinDelay,
     maxDelay,
-    setMaxDelay,
     delayAfterNNumbers,
-    setDelayAfterNNumbers,
     numberCheckResults,
     numberCheckJobStatus,
     startNumberCheck,
@@ -50,45 +38,9 @@ const NumberCheckSection: React.FC = () => {
     resumeNumberChecking,
     stopNumberChecking,
     isSocketConnected,
-    availableNumberCheckJobs, // Daftar pekerjaan dari server
-    loadAvailableNumberCheckJobs, // Action untuk memuat pekerjaan
-    currentNumberCheckJobId, // Job ID yang sedang aktif di store
-    generateNewNumberCheckJobId, // Action untuk generate ID baru
-    setNumberCheckJobStatus, // Untuk mengatur status job saat memuat
+    loadAvailableNumberCheckJobs,
+    currentNumberCheckJobId,
   } = useWhatsAppStore();
-
-  // State lokal untuk input Job ID yang diisi user
-  const [jobIdInput, setJobIdInput] = useState<string>(currentNumberCheckJobId);
-  // State lokal untuk job ID yang dipilih dari dropdown
-  const [selectedJobIdFromDropdown, setSelectedJobIdFromDropdown] =
-    useState<string>("");
-
-  // Efek untuk memuat pustaka XLSX saat komponen di-mount
-  useEffect(() => {
-    const script = document.createElement("script");
-    script.src =
-      "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
-    script.async = true;
-    document.body.appendChild(script);
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
-
-  // Efek untuk memuat daftar pekerjaan saat socket terhubung
-  useEffect(() => {
-    if (isSocketConnected) {
-      loadAvailableNumberCheckJobs();
-    }
-  }, [isSocketConnected, loadAvailableNumberCheckJobs]);
-
-  // Efek untuk menyinkronkan jobIdInput dengan currentNumberCheckJobId dari store
-  // Ini penting agar input menampilkan ID job yang sedang aktif (baik baru digenerate atau dimuat)
-  useEffect(() => {
-    setJobIdInput(currentNumberCheckJobId);
-    // Reset dropdown pilihan saat job ID aktif berubah (misal, job baru dimulai)
-    setSelectedJobIdFromDropdown("");
-  }, [currentNumberCheckJobId]);
 
   const handleFileUpload = useCallback(
     (files: File[] | File) => {
@@ -144,7 +96,7 @@ const NumberCheckSection: React.FC = () => {
   const handleStartCheckNumbers = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!jobIdInput.trim()) {
+    if (!currentNumberCheckJobId.trim()) {
       toast.error("ID Pekerjaan tidak boleh kosong.");
       return;
     }
@@ -203,9 +155,8 @@ const NumberCheckSection: React.FC = () => {
       delayAfterNNumbers: delayAfterNNumbers,
     };
 
-    // Gunakan jobIdInput sebagai jobId untuk memulai pekerjaan
     startNumberCheck(
-      jobIdInput, // Gunakan Job ID dari input
+      currentNumberCheckJobId,
       mainClient.accountId,
       uploadedExcelData,
       selectedPhoneNumberColumn,
@@ -215,7 +166,8 @@ const NumberCheckSection: React.FC = () => {
   };
 
   const handlePauseResumeStopCheck = (action: "pause" | "resume" | "stop") => {
-    const jobIdToControl = numberCheckJobStatus?.jobId || jobIdInput; // Prioritaskan status job, fallback ke input
+    const jobIdToControl =
+      numberCheckJobStatus?.jobId || currentNumberCheckJobId;
     if (!jobIdToControl) {
       toast.error(
         "Tidak ada pekerjaan pengecekan nomor yang sedang berjalan atau dijeda."
@@ -228,70 +180,53 @@ const NumberCheckSection: React.FC = () => {
     } else if (action === "resume") {
       resumeNumberChecking(jobIdToControl);
     } else if (action === "stop") {
-      stopNumberChecking(jobIdToControl); // Ini akan memicu penghapusan dari DB dan update frontend
-    }
-  };
-
-  const handleLoadJob = () => {
-    const jobToLoad = availableNumberCheckJobs.find(
-      (job) => job.jobId === selectedJobIdFromDropdown
-    );
-    if (jobToLoad) {
-      // Set status job di frontend
-      setNumberCheckJobStatus({
-        jobId: jobToLoad.jobId,
-        current: jobToLoad.current,
-        total: jobToLoad.total,
-        status: jobToLoad.status,
-        message: `Pekerjaan dimuat: ${jobToLoad.status}`,
-      });
-      // Set currentNumberCheckJobId di store agar UI sinkron
-      useWhatsAppStore.setState({
-        currentNumberCheckJobId: jobToLoad.jobId,
-        uploadedExcelData: null, // Data Excel tidak disimpan di NumberCheckProgressUpdate, jadi reset
-        excelColumns: [],
-        selectedPhoneNumberColumn: "",
-        minDelay: 2, // Reset ke default atau muat dari jobToLoad jika ada di sana
-        maxDelay: 4,
-        delayAfterNNumbers: 10,
-        numberCheckResults: [], // Hasil akan diisi ulang dari backend jika diperlukan, atau dimulai dari kosong
-      });
-      toast.success(`Pekerjaan '${jobToLoad.jobId}' berhasil dimuat.`);
-    } else {
-      toast.error("Pekerjaan tidak ditemukan.");
-    }
-  };
-
-  const handleDeleteJob = () => {
-    if (!selectedJobIdFromDropdown) {
-      toast.error("Pilih pekerjaan yang ingin dihapus.");
-      return;
-    }
-    // Konfirmasi penghapusan (opsional, bisa diganti dengan dialog kustom)
-    if (
-      window.confirm(
-        `Anda yakin ingin menghapus pekerjaan '${selectedJobIdFromDropdown}'?`
-      )
-    ) {
-      // Panggil stopNumberChecking, yang di backend akan menghapus dari DB dan emit event 'job-removed'
-      stopNumberChecking(selectedJobIdFromDropdown);
-      // UI akan diupdate melalui listener 'whatsapp-number-check-job-removed' di slice
-      toast.success(
-        `Permintaan penghapusan pekerjaan '${selectedJobIdFromDropdown}' dikirim.`
-      );
-      setSelectedJobIdFromDropdown(""); // Reset pilihan
-      // generateNewNumberCheckJobId(); // Ini akan dipicu oleh listener 'job-removed' jika job aktif dihapus
+      stopNumberChecking(jobIdToControl);
     }
   };
 
   const isCheckingNumbers =
-    numberCheckJobStatus?.status === "running" ||
-    numberCheckJobStatus?.status === "paused";
+    numberCheckJobStatus?.status === "RUNNING" ||
+    numberCheckJobStatus?.status === "PAUSED";
 
   const hasActiveMainClient = clients.some(
     (c) =>
       c.isMainClient && (c.status === "ready" || c.status === "authenticated")
   );
+
+  // Efek untuk memuat pustaka XLSX saat komponen di-mount
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src =
+      "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+    script.async = true;
+    document.body.appendChild(script);
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
+  // Efek untuk memuat daftar pekerjaan saat socket terhubung
+  useEffect(() => {
+    if (isSocketConnected) {
+      loadAvailableNumberCheckJobs();
+    }
+  }, [isSocketConnected, loadAvailableNumberCheckJobs]);
+
+  // Efek untuk menambahkan event listener sebelum meninggalkan halaman
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (isCheckingNumbers) {
+        const confirmationMessage =
+          "Pekerjaan sedang berjalan. Yakin ingin keluar? Progress akan hilang!";
+        event.returnValue = confirmationMessage;
+        return confirmationMessage;
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [isCheckingNumbers]);
 
   return (
     <Card className="w-full max-w-[75vw] mx-auto rounded-lg shadow-xl border">
@@ -303,76 +238,7 @@ const NumberCheckSection: React.FC = () => {
           </p>
         )}
 
-        {/* Pemilihan Job ID */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="job-id-input">ID Pekerjaan Baru / Aktif</Label>
-            <Input
-              id="job-id-input"
-              type="text"
-              value={jobIdInput}
-              onChange={(e) => setJobIdInput(e.target.value)}
-              placeholder="Masukkan ID pekerjaan unik"
-              disabled={isCheckingNumbers}
-            />
-            <Button
-              onClick={() => {
-                const newId = uuidv4();
-                setJobIdInput(newId);
-                generateNewNumberCheckJobId(); // Update store dengan ID baru
-                toast.info(`ID Pekerjaan baru dibuat: ${newId}`);
-              }}
-              variant="outline"
-              size="sm"
-              className="w-full"
-              disabled={isCheckingNumbers}
-            >
-              <PlusCircle className="mr-2 h-4 w-4" /> Generate ID Baru
-            </Button>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="load-job-select">Muat Pekerjaan Tersimpan</Label>
-            <div className="flex gap-2">
-              <Select
-                onValueChange={setSelectedJobIdFromDropdown}
-                value={selectedJobIdFromDropdown}
-                disabled={
-                  isCheckingNumbers || availableNumberCheckJobs.length === 0
-                }
-              >
-                <SelectTrigger className="flex-grow">
-                  <SelectValue placeholder="Pilih pekerjaan..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableNumberCheckJobs.map((job) => (
-                    <SelectItem key={job.jobId} value={job.jobId}>
-                      {job.jobId} ({job.status}) - {job.current}/{job.total}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button
-                onClick={handleLoadJob}
-                disabled={!selectedJobIdFromDropdown || isCheckingNumbers}
-                variant="outline"
-                size="icon"
-                title="Muat Pekerjaan"
-              >
-                <RefreshCcw className="h-4 w-4" />
-              </Button>
-              <Button
-                onClick={handleDeleteJob}
-                disabled={!selectedJobIdFromDropdown || isCheckingNumbers}
-                variant="destructive"
-                size="icon"
-                title="Hapus Pekerjaan"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
+        <JobIdManagement isCheckingNumbers={isCheckingNumbers} />
 
         {uploadedExcelData && excelColumns.length > 0 ? (
           <div className="space-y-2">
@@ -408,59 +274,10 @@ const NumberCheckSection: React.FC = () => {
           />
         )}
 
-        {/* Konfigurasi Jeda */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-md bg-muted">
-          <div className="space-y-2">
-            <Label htmlFor="min-delay" className="text-foreground">
-              Jeda Minimal (detik)
-            </Label>
-            <Input
-              id="min-delay"
-              type="number"
-              value={minDelay}
-              onChange={(e) => setMinDelay(Number(e.target.value))}
-              min={0}
-              disabled={isCheckingNumbers}
-              className="w-full"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="max-delay" className="text-foreground">
-              Jeda Maksimal (detik)
-            </Label>
-            <Input
-              id="max-delay"
-              type="number"
-              value={maxDelay}
-              onChange={(e) => setMaxDelay(Number(e.target.value))}
-              min={0}
-              disabled={isCheckingNumbers}
-              className="w-full"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="delay-after-n" className="text-foreground">
-              Jeda Setelah N Nomor
-            </Label>
-            <Input
-              id="delay-after-n"
-              type="number"
-              value={delayAfterNNumbers}
-              onChange={(e) => setDelayAfterNNumbers(Number(e.target.value))}
-              min={1}
-              disabled={isCheckingNumbers}
-              className="w-full"
-            />
-          </div>
-          <p className="md:col-span-3 text-sm text-muted-foreground">
-            Proses akan menjeda secara acak antara {minDelay}-{maxDelay} detik
-            setelah memeriksa setiap {delayAfterNNumbers} nomor.
-          </p>
-        </div>
+        <DelayConfiguration isCheckingNumbers={isCheckingNumbers} />
 
-        {/* Tombol Kontrol Pengecekan Nomor */}
         <div className="flex gap-2 w-full">
-          {numberCheckJobStatus?.status === "running" ? (
+          {numberCheckJobStatus?.status === "RUNNING" ? (
             <Button
               variant="secondary"
               onClick={() => handlePauseResumeStopCheck("pause")}
@@ -470,7 +287,7 @@ const NumberCheckSection: React.FC = () => {
               <Pause className="mr-2 h-4 w-4" /> Jeda Pengecekan (
               {numberCheckJobStatus.current}/{numberCheckJobStatus.total})
             </Button>
-          ) : numberCheckJobStatus?.status === "paused" ? (
+          ) : numberCheckJobStatus?.status === "PAUSED" ? (
             <Button
               variant="default"
               onClick={() => handlePauseResumeStopCheck("resume")}
@@ -490,15 +307,15 @@ const NumberCheckSection: React.FC = () => {
                 !uploadedExcelData ||
                 !selectedPhoneNumberColumn ||
                 !hasActiveMainClient ||
-                isCheckingNumbers // Disable jika ada job lain sedang berjalan
+                isCheckingNumbers
               }
             >
               {"Mulai Pengecekan Nomor dari Excel"}
             </Button>
           )}
-          {(numberCheckJobStatus?.status === "running" ||
-            numberCheckJobStatus?.status === "paused" ||
-            numberCheckJobStatus?.status === "error") && (
+          {(numberCheckJobStatus?.status === "RUNNING" ||
+            numberCheckJobStatus?.status === "PAUSED" ||
+            numberCheckJobStatus?.status === "ERROR") && (
             <Button
               onClick={() => handlePauseResumeStopCheck("stop")}
               variant="destructive"

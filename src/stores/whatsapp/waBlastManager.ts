@@ -209,4 +209,15 @@ export const createWaBlastManagerSlice: StateCreator<
     socket.emit("whatsapp-get-blast-job", { jobId });
     get().resetGlobalError();
   },
+  setSelectedSenderAccountIds(ids) {
+    set({
+      waBlastJobs: {
+        ...get().waBlastJobs,
+        [get().currentSelectedWABlastJobId!]: {
+          ...get().waBlastJobs[get().currentSelectedWABlastJobId!],
+          senderAccountIds: ids,
+        },
+      },
+    });
+  },
 });

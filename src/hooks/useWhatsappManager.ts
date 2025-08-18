@@ -2,7 +2,6 @@ import { connectWhatsappSocket, getWhatsappSocket } from "@/lib/whatsappSocket";
 import { useWhatsAppStore } from "@/stores/whatsapp";
 import {
   WhatsAppClientStatusUpdate,
-  WhatsAppNumberCheckResult,
   NumberCheckProgressUpdate,
   WarmerProgressUpdate,
   WarmerMessageLogEntry,
@@ -27,20 +26,19 @@ export const useWhatsAppManager = () => {
     setGlobalError,
     updateClientStatus,
     setExistingClients,
-    addNumberCheckResult,
     setNumberCheckJobStatus,
     resetNumberCheckResults,
     generateNewNumberCheckJobId,
+    setWaWarmerJobs,
     setWarmerJobStatus,
     addWarmerMessageLogEntry,
     resetWarmerMessagesLog,
     generateNewWarmerJobId,
-    // Perubahan untuk WA Blast (sesuai dengan whatsappStore.ts yang baru)
-    setWaBlastJobs, // BARU: Untuk memuat semua pekerjaan
-    updateWaBlastJobStatus, // BARU: Untuk memperbarui satu pekerjaan
-    addWABlastMessageLogEntry, // BARU: Menerima jobId
-    removeWaBlastJob, // BARU: Untuk menghapus pekerjaan dari state
-    setCurrentSelectedWABlastJobId, // BARU: Untuk memilih pekerjaan yang akan ditampilkan
+    setWaBlastJobs,
+    updateWaBlastJobStatus,
+    addWABlastMessageLogEntry,
+    removeWaBlastJob,
+    setCurrentSelectedWABlastJobId,
     setStoredMessages,
     loadStoredMessages,
     setWhitelistNumbers,
@@ -99,7 +97,6 @@ export const useWhatsAppManager = () => {
 
     // Event listener untuk pembaruan status klien WhatsApp dari backend
     const onWhatsAppStatus = (update: WhatsAppClientStatusUpdate) => {
-      console.log("Menerima pembaruan status:", update);
       updateClientStatus(update);
     };
 
@@ -107,7 +104,6 @@ export const useWhatsAppManager = () => {
     const onExistingClients = (
       existingClients: WhatsAppClientStatusUpdate[]
     ) => {
-      console.log("Menerima klien yang sudah ada:", existingClients);
       setExistingClients(existingClients);
     };
 
@@ -118,24 +114,24 @@ export const useWhatsAppManager = () => {
       const currentNumberCheckJobStatus =
         useWhatsAppStore.getState().numberCheckJobStatus;
       if (
-        currentNumberCheckJobStatus?.status === "running" ||
-        currentNumberCheckJobStatus?.status === "paused"
+        currentNumberCheckJobStatus?.status === "RUNNING" ||
+        currentNumberCheckJobStatus?.status === "PAUSED"
       ) {
         setNumberCheckJobStatus({
           ...currentNumberCheckJobStatus,
-          status: "error",
+          status: "ERROR",
           message: error.message,
         });
       }
       const currentWarmerJobStatus =
         useWhatsAppStore.getState().warmerJobStatus;
       if (
-        currentWarmerJobStatus?.status === "running" ||
-        currentWarmerJobStatus?.status === "paused"
+        currentWarmerJobStatus?.status === "RUNNING" ||
+        currentWarmerJobStatus?.status === "PAUSED"
       ) {
         setWarmerJobStatus({
           ...currentWarmerJobStatus,
-          status: "error",
+          status: "ERROR",
           message: error.message,
         });
       }
@@ -157,48 +153,44 @@ export const useWhatsAppManager = () => {
       }
     };
 
-    // Event listener untuk hasil pengecekan nomor tunggal (real-time)
-    const onNumberCheckResultSingle = (payload: {
-      jobId: string;
-      result: WhatsAppNumberCheckResult;
-    }) => {
-      console.log("Menerima hasil pengecekan nomor tunggal:", payload.result);
-      addNumberCheckResult(payload);
-    };
-
     // Event listener untuk update progress pekerjaan pengecekan nomor
     const onNumberCheckProgress = (update: NumberCheckProgressUpdate) => {
-      console.log("Menerima progress pengecekan nomor:", update);
       setNumberCheckJobStatus(update);
+    };
+
+    // Event listener untuk mendapatkan semua pekerjaan waWarmer yang aktif
+    const onWarmerJobs = (jobs: WarmerProgressUpdate[]) => {
+      const jobsMap: Record<string, WarmerProgressUpdate> = {};
+      jobs.forEach((job) => {
+        jobsMap[job.jobId] = job;
+      });
+
+      console.log("onWarmerJobs", jobsMap);
+      setWaWarmerJobs(jobsMap);
     };
 
     // Event listener untuk update progress pekerjaan warmer
     const onWarmerProgress = (update: WarmerProgressUpdate) => {
-      console.log("Menerima progress warmer:", update);
       setWarmerJobStatus(update);
     };
 
     // Event listener untuk setiap pesan yang dikirim oleh warmer
     const onWarmerMessageSent = (entry: WarmerMessageLogEntry) => {
-      console.log("Menerima log pesan warmer:", entry);
       addWarmerMessageLogEntry(entry);
     };
 
     // BARU: Event listener untuk update progress pekerjaan WA Blast (per job)
     const onWABlastProgress = (update: WABlastProgressUpdate) => {
-      console.log("Menerima progress WA Blast:", update);
       updateWaBlastJobStatus(update); // Memperbarui status job spesifik
     };
 
     // BARU: Event listener untuk setiap pesan yang dikirim oleh WA Blast (per job)
     const onWABlastMessageSent = (entry: WABlastMessageLogEntry) => {
-      console.log("Menerima log pesan WA Blast:", entry);
       addWABlastMessageLogEntry(entry.blastJobId!, entry); // Meneruskan jobId
     };
 
     // Event listener untuk daftar pesan tersimpan
     const onStoredMessages = (messages: StoredMessage[]) => {
-      console.log("Menerima pesan tersimpan:", messages);
       setStoredMessages(messages);
     };
 
@@ -220,21 +212,18 @@ export const useWhatsAppManager = () => {
       loadStoredMessages(); // Muat ulang daftar pesan untuk update UI
     };
 
-    // Event listener untuk pengaturan awal (termasuk whitelist dan notification sender)
+    // Event listener untuk pengaturan awal (termasuk whitelist)
     const onInitialSettings = (payload: InitialSettingsPayload) => {
-      console.log("Menerima pengaturan awal:", payload);
       setInitialSettings(payload); // Memperbarui state whitelist dan mainClientAccountId
     };
 
     // Event listener saat whitelist diperbarui dari backend
     const onWhitelistUpdated = (payload: { numbers: string[] }) => {
-      console.log("Menerima pembaruan whitelist:", payload.numbers);
       setWhitelistNumbers(payload.numbers); // Memperbarui state whitelist di store
       toast.info("Daftar whitelist diperbarui dari server.");
     };
 
     const onAllActiveBlastJobs = (jobs: WABlastProgressUpdate[]) => {
-      console.log("Menerima semua status WA Blast aktif:", jobs);
       const jobsMap: Record<string, WABlastProgressUpdate> = {};
       jobs.forEach((job) => {
         jobsMap[job.jobId] = job;
@@ -254,10 +243,6 @@ export const useWhatsAppManager = () => {
       }
     };
     const onAllBlastJobs = (jobs: WABlastProgressUpdate[]) => {
-      console.log(
-        "Menerima semua status WA Blast (termasuk yang selesai):",
-        jobs
-      );
       const jobsMap: Record<string, WABlastProgressUpdate> = {};
       jobs.forEach((job) => {
         jobsMap[job.jobId] = job;
@@ -298,8 +283,8 @@ export const useWhatsAppManager = () => {
     socket.on("whatsapp-status", onWhatsAppStatus);
     socket.on("existing-whatsapp-clients", onExistingClients);
     socket.on("whatsapp-error", onWhatsAppError);
-    socket.on("whatsapp-number-check-result-single", onNumberCheckResultSingle);
     socket.on("whatsapp-number-check-progress", onNumberCheckProgress);
+    socket.on("whatsapp-all-active-warmer-jobs", onWarmerJobs);
     socket.on("whatsapp-warmer-progress", onWarmerProgress);
     socket.on("whatsapp-warmer-message-sent", onWarmerMessageSent);
     socket.on("whatsapp-blast-progress", onWABlastProgress);
@@ -323,11 +308,8 @@ export const useWhatsAppManager = () => {
       socket.off("whatsapp-status", onWhatsAppStatus);
       socket.off("existing-whatsapp-clients", onExistingClients);
       socket.off("whatsapp-error", onWhatsAppError);
-      socket.off(
-        "whatsapp-number-check-result-single",
-        onNumberCheckResultSingle
-      );
       socket.off("whatsapp-number-check-progress", onNumberCheckProgress);
+      socket.off("whatsapp-all-active-warmer-jobs", onWarmerJobs);
       socket.off("whatsapp-warmer-progress", onWarmerProgress);
       socket.off("whatsapp-warmer-message-sent", onWarmerMessageSent);
       socket.off("whatsapp-blast-progress", onWABlastProgress);
@@ -349,10 +331,10 @@ export const useWhatsAppManager = () => {
     setGlobalError,
     updateClientStatus,
     setExistingClients,
-    addNumberCheckResult,
     setNumberCheckJobStatus,
     resetNumberCheckResults,
     generateNewNumberCheckJobId,
+    setWaWarmerJobs,
     setWarmerJobStatus,
     addWarmerMessageLogEntry,
     resetWarmerMessagesLog,

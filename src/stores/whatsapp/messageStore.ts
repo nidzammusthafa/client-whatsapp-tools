@@ -1,5 +1,4 @@
 import { StateCreator } from "zustand";
-import { getWhatsappSocket } from "@/lib/whatsappSocket";
 import { toast } from "sonner";
 import {
   MessageStoreState,
@@ -8,10 +7,13 @@ import {
   WhatsAppActions,
 } from "@/types/store/whatsappState";
 import {
+  StoredMessage,
   SaveStoredMessagePayload,
-  DeleteStoredMessagePayload,
   UpdateStoredMessagePayload,
 } from "@/types";
+
+const NEXT_PUBLIC_WHATSAPP_SERVER_URL =
+  process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000/api/whatsapp";
 
 export const createMessageStoreSlice: StateCreator<
   WhatsAppState & WhatsAppActions,
@@ -24,52 +26,82 @@ export const createMessageStoreSlice: StateCreator<
 
   // Actions for Message Store
   setStoredMessages: (messages) => set({ storedMessages: messages }),
-  loadStoredMessages: () => {
-    const socket = getWhatsappSocket();
-    if (!get().isSocketConnected) {
-      console.warn("Socket not connected, cannot load stored messages yet.");
-      return;
+  loadStoredMessages: async () => {
+    try {
+      const response = await fetch(
+        `${NEXT_PUBLIC_WHATSAPP_SERVER_URL}/stored-message/stored-messages`
+      );
+      if (!response.ok) {
+        throw new Error("Gagal memuat pesan tersimpan.");
+      }
+      const messages: StoredMessage[] = await response.json();
+      set({ storedMessages: messages });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      toast.error(error.message || "Gagal memuat pesan tersimpan.");
     }
-    socket.emit("whatsapp-get-stored-messages");
   },
   saveNewStoredMessage: async (name, content) => {
-    const socket = getWhatsappSocket();
-    if (!get().isSocketConnected) {
-      toast.error("Socket tidak terhubung. Coba lagi.");
-      return;
+    try {
+      const payload: SaveStoredMessagePayload = { name, content };
+      const response = await fetch(
+        `${NEXT_PUBLIC_WHATSAPP_SERVER_URL}/stored-message/stored-messages`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message);
+      }
+      toast.success(`Pesan '${name}' berhasil disimpan.`);
+      get().loadStoredMessages(); // Muat ulang daftar pesan untuk update UI
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      toast.error(error.message || "Gagal menyimpan pesan.");
     }
-    const payload: SaveStoredMessagePayload = { name, content };
-    socket.emit("whatsapp-save-stored-message", payload);
-    get().resetGlobalError();
   },
-  deleteExistingStoredMessage: (id) => {
-    const socket = getWhatsappSocket();
-    if (!get().isSocketConnected) {
-      toast.error("Socket tidak terhubung. Coba lagi.");
-      return;
+  deleteExistingStoredMessage: async (id) => {
+    try {
+      const response = await fetch(
+        `${NEXT_PUBLIC_WHATSAPP_SERVER_URL}/stored-message/stored-messages/${id}`,
+        {
+          method: "DELETE",
+        }
+      );
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message);
+      }
+      toast.success(`Pesan berhasil dihapus.`);
+      get().loadStoredMessages(); // Muat ulang daftar pesan untuk update UI
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      toast.error(error.message || "Gagal menghapus pesan.");
     }
-    const payload: DeleteStoredMessagePayload = { id };
-    socket.emit("whatsapp-delete-stored-message", payload);
-    get().resetGlobalError();
-    set((state) => ({
-      storedMessages: state.storedMessages.filter((msg) => msg.id !== id),
-    }));
   },
   updateExistingStoredMessage: async (id, name, content) => {
-    const socket = getWhatsappSocket();
-    if (!get().isSocketConnected) {
-      toast.error("Socket tidak terhubung. Coba lagi.");
-      return;
+    try {
+      const payload: UpdateStoredMessagePayload = { id, name, content };
+      const response = await fetch(
+        `${NEXT_PUBLIC_WHATSAPP_SERVER_URL}/stored-message/stored-messages/${id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message);
+      }
+      toast.success(`Pesan '${name}' berhasil diperbarui.`);
+      get().loadStoredMessages(); // Muat ulang daftar pesan untuk update UI
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      toast.error(error.message || "Gagal memperbarui pesan.");
     }
-    const payload: UpdateStoredMessagePayload = { id, name, content };
-    socket.emit("whatsapp-update-stored-message", payload);
-    get().resetGlobalError();
-    set((state) => ({
-      storedMessages: state.storedMessages.map((msg) =>
-        msg.id === id
-          ? { ...msg, name, content, updatedAt: new Date().toISOString() }
-          : msg
-      ),
-    }));
   },
 });

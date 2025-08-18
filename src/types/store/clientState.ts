@@ -11,7 +11,6 @@ export interface ClientState {
   newClientAccountId: string;
   isHeadlessMode: boolean;
   initialSettingsLoaded: boolean;
-  notificationSenderAccountId: string | null;
   whitelistNumbers: string[];
 }
 
@@ -41,5 +40,4 @@ export interface ClientActions {
   disconnectClient: (accountId: string) => void;
   disconnectAllClients: () => void;
   initializeMultipleClients: (accountIds: string[], headless: boolean) => void;
-  setNotificationSenderAccountId: (accountId: string | null) => void;
 }

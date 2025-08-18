@@ -11,3 +11,4 @@ export * from "./whatsapp/warmer";
 export * from "./whatsapp/blast";
 export * from "./whatsapp/stored-message";
 export * from "./store/whatsappState";
+export * from "./whatsapp/conservation";

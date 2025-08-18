@@ -6,11 +6,11 @@
  * BARU: Status pekerjaan obrolan otomatis (warmer).
  */
 export type WarmerJobStatus =
-  | "idle"
-  | "running"
-  | "paused"
-  | "completed"
-  | "error";
+  | "IDLE"
+  | "RUNNING"
+  | "PAUSED"
+  | "COMPLETED"
+  | "ERROR";
 
 /**
  * BARU: Interface untuk update progress pekerjaan warmer.

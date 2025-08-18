@@ -459,9 +459,9 @@ const WABlastMessagesTable: React.FC<WABlastMessagesTableProps> = ({
             )}
           </TableBody>
         </table>
-        <div className="sticky bottom-0 z-10 border-t bg-slate-50 p-2 dark:bg-neutral-900/90">
-          <DataTablePagination table={table} />
-        </div>
+      </div>
+      <div className="sticky bottom-0 z-10 bg-slate-50 p-2 dark:bg-neutral-900/90">
+        <DataTablePagination table={table} />
       </div>
     </div>
   );

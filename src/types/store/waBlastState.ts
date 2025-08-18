@@ -55,4 +55,5 @@ export interface WaBlastActions {
   setWhatsappWarmerMaxMessages: (value: number) => void;
   setWhatsappWarmerDelayMs: (value: number) => void;
   setWhatsappWarmerLanguage: (value: "en" | "id") => void;
+  setSelectedSenderAccountIds: (ids: string[]) => void;
 }

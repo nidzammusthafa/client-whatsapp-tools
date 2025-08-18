@@ -9,6 +9,7 @@ import { createNumberCheckManagerSlice } from "./numberCheckManager";
 import { createWaWarmerManagerSlice } from "./waWarmerManager";
 import { createWaBlastManagerSlice } from "./waBlastManager";
 import { createMessageStoreSlice } from "./messageStore";
+import { createConversationSlice } from "./conversationStore";
 
 export const useWhatsAppStore = create<WhatsAppState & WhatsAppActions>()(
   devtools(
@@ -19,6 +20,7 @@ export const useWhatsAppStore = create<WhatsAppState & WhatsAppActions>()(
       ...createWaWarmerManagerSlice(...a),
       ...createWaBlastManagerSlice(...a),
       ...createMessageStoreSlice(...a),
+      ...createConversationSlice(...a),
     }))
   )
 );

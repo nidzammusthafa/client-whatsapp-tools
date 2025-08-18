@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/providers/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import Header from "@/components/layout/Header";
 import { AuthProvider } from "@/components/providers/auth-providers";
+import { NotificationPermission } from "@/components/notificationPermission";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -41,6 +42,7 @@ export default function RootLayout({
             <Header />
             <main className="container max-w-screen px-2 sm:px4">
               {children}
+              <NotificationPermission />
             </main>
             <Toaster expand={true} closeButton theme="dark" richColors />
           </AuthProvider>

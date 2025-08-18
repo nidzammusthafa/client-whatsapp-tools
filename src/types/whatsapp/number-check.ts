@@ -25,11 +25,12 @@ export interface WhatsAppNumberCheckResult {
  * Status pekerjaan pengecekan nomor.
  */
 export type NumberCheckJobStatus =
-  | "idle"
-  | "running"
-  | "paused"
-  | "completed"
-  | "error";
+  | "IDLE"
+  | "RUNNING"
+  | "PAUSED"
+  | "COMPLETED"
+  | "STOPPED"
+  | "ERROR";
 
 /**
  * Interface untuk update progress pekerjaan pengecekan nomor.

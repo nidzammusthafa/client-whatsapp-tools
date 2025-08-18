@@ -15,7 +15,6 @@ import {
   PauseCircle,
   Star,
   Info,
-  BellRing, // Import Info icon for message tooltip
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -46,7 +45,6 @@ interface ClientStatusItemProps {
   onDeleteClient: (accountId: string) => void;
   onDisconnectClient: (accountId: string) => void;
   onSetAsMain: (accountId: string) => void;
-  isNotificationSender: boolean;
 }
 
 const ClientStatusItem: React.FC<ClientStatusItemProps> = ({
@@ -57,7 +55,6 @@ const ClientStatusItem: React.FC<ClientStatusItemProps> = ({
   onDeleteClient,
   onDisconnectClient,
   onSetAsMain,
-  isNotificationSender,
 }) => {
   const [isHeadless, setIsHeadless] = useState<boolean>(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
@@ -254,16 +251,6 @@ const ClientStatusItem: React.FC<ClientStatusItemProps> = ({
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>Klien Utama</p>
-                  </TooltipContent>
-                </Tooltip>
-              )}
-              {isNotificationSender && ( // BARU: Tampilkan ikon jika ini pengirim notifikasi
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <BellRing className="h-5 w-5 text-blue-500 flex-shrink-0" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Pengirim Notifikasi Pesan Masuk</p>
                   </TooltipContent>
                 </Tooltip>
               )}

@@ -124,8 +124,6 @@ const WABlastSection: React.FC = () => {
       ? waBlastJobs[currentSelectedWABlastJobId]
       : undefined;
 
-  console.log("Current Job:", currentJob);
-
   // Efek untuk memuat ulang data form jika pekerjaan yang dipilih berubah
   useEffect(() => {
     if (currentJob) {

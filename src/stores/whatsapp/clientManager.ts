@@ -11,14 +11,15 @@ import {
 import {
   WhatsAppClientStatusUpdate,
   LoginRequestPayload,
-  LogoutRequestPayload,
   RenameClientPayload,
   DeleteClientPayload,
   DisconnectClientPayload,
-  SetMainClientPayload,
   InitializeMultipleClientsPayload,
-  SetNotificationSenderPayload,
+  LogoutRequestPayload,
 } from "@/types";
+
+const NEXT_PUBLIC_WHATSAPP_SERVER_URL =
+  process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000/api/whatsapp";
 
 export const createClientManagerSlice: StateCreator<
   WhatsAppState & WhatsAppActions,
@@ -36,7 +37,6 @@ export const createClientManagerSlice: StateCreator<
   newClientAccountId: "",
   isHeadlessMode: false,
   initialSettingsLoaded: false,
-  notificationSenderAccountId: null,
   whitelistNumbers: [],
 
   // Actions for Client Manager
@@ -66,15 +66,12 @@ export const createClientManagerSlice: StateCreator<
         );
       }
 
-      // Logic untuk mengatur klien utama default saat klien baru terautentikasi
-      // Hanya jika belum ada klien utama yang ditandai dari backend (dari DB)
       if (
         (update.status === "ready" || update.status === "authenticated") &&
         !Array.from(newClientsMap.values()).some((c) => c.isMainClient) &&
-        get().initialSettingsLoaded // Pastikan pengaturan awal sudah dimuat
+        get().initialSettingsLoaded
       ) {
         newClientsMap.get(update.accountId)!.isMainClient = true;
-        // PENTING: Kirim event ke backend untuk menyimpan ini sebagai klien utama persisten
         get().setClientAsMain(update.accountId);
       }
 
@@ -103,15 +100,12 @@ export const createClientManagerSlice: StateCreator<
         }
       });
 
-      // Jika pengaturan awal sudah dimuat dan tidak ada klien utama dari backend,
-      // coba atur klien pertama yang siap/terautentikasi sebagai klien utama.
       if (!hasMainClientFromBackend && get().initialSettingsLoaded) {
         const firstReadyClient = Array.from(newClientsMap.values()).find(
           (c) => c.status === "ready" || c.status === "authenticated"
         );
         if (firstReadyClient) {
           newClientsMap.get(firstReadyClient.accountId)!.isMainClient = true;
-          // PENTING: Kirim event ke backend untuk menyimpan ini sebagai klien utama persisten
           get().setClientAsMain(firstReadyClient.accountId);
         }
       }
@@ -128,18 +122,14 @@ export const createClientManagerSlice: StateCreator<
         (c) => c.accountId === accountId
       )?.isMainClient;
       if (wasMainClient) {
-        // Jika klien utama dihapus, dan ada klien lain yang siap,
-        // atur klien pertama yang siap/terautentikasi sebagai klien utama yang baru.
         const firstReadyClient = updatedClients.find(
           (c) => c.status === "ready" || c.status === "authenticated"
         );
         if (firstReadyClient) {
           firstReadyClient.isMainClient = true;
-          // PENTING: Kirim event ke backend untuk menyimpan ini sebagai klien utama persisten
           get().setClientAsMain(firstReadyClient.accountId);
         } else {
-          // Jika tidak ada klien lain yang siap, reset klien utama di backend
-          get().setClientAsMain(""); // Kirim string kosong atau null untuk mereset
+          get().setClientAsMain("");
         }
       }
       return { clients: updatedClients };
@@ -152,38 +142,57 @@ export const createClientManagerSlice: StateCreator<
   setNewClientAccountId: (id) => set({ newClientAccountId: id }),
   setIsHeadlessMode: (headless) => set({ isHeadlessMode: headless }),
 
-  setClientAsMain: (accountId) => {
-    const socket = getWhatsappSocket();
-    if (!get().isSocketConnected) {
-      toast.error("Socket tidak terhubung. Coba lagi.");
-      return;
+  setClientAsMain: async (accountId) => {
+    try {
+      const response = await fetch(
+        `${NEXT_PUBLIC_WHATSAPP_SERVER_URL}/setting/main-client`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ accountId }),
+        }
+      );
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message);
+      }
+
+      get().resetGlobalError();
+      // Optimistic update: Perbarui di frontend segera
+      set((state) => {
+        const updatedClients = state.clients.map((client) => ({
+          ...client,
+          isMainClient: client.accountId === accountId,
+        }));
+        return { clients: updatedClients };
+      });
+      toast.success("Klien utama berhasil diatur.");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      toast.error(error.message || "Gagal mengatur klien utama.");
     }
-    const payload: SetMainClientPayload = { accountId };
-    socket.emit("whatsapp-set-main-client", payload);
-    get().resetGlobalError();
-    // Optimistic update: Perbarui di frontend segera
-    set((state) => {
-      const updatedClients = state.clients.map((client) => ({
-        ...client,
-        isMainClient: client.accountId === accountId,
-      }));
-      return { clients: updatedClients };
-    });
   },
 
-  loadInitialSettings: () => {
-    const socket = getWhatsappSocket();
-    if (!get().isSocketConnected) {
-      console.warn("Socket not connected, cannot load initial settings yet.");
-      return;
+  loadInitialSettings: async () => {
+    try {
+      const response = await fetch(
+        `${NEXT_PUBLIC_WHATSAPP_SERVER_URL}/setting/initial`
+      );
+      if (!response.ok) throw new Error("Gagal memuat pengaturan awal.");
+      const payload: InitialSettingsPayload = await response.json();
+      set({
+        initialSettingsLoaded: true,
+        whitelistNumbers: payload.whitelistNumbers,
+      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      toast.error(error.message || "Gagal memuat pengaturan awal.");
     }
-    socket.emit("whatsapp-get-initial-settings");
   },
 
   setInitialSettings: (payload: InitialSettingsPayload) => {
     set((state) => {
       const newClientsMap = new Map(state.clients.map((c) => [c.accountId, c]));
-      // Perbarui status isMainClient pada klien yang sudah ada di memori
       if (payload.mainClientAccountId) {
         const mainClient = newClientsMap.get(payload.mainClientAccountId);
         if (mainClient) {
@@ -194,54 +203,67 @@ export const createClientManagerSlice: StateCreator<
 
       return {
         clients: Array.from(newClientsMap.values()),
-        // whitelistNumbers: payload.whitelistNumbers, // This belongs to NumberCheckState
         initialSettingsLoaded: true,
-        notificationSenderAccountId: payload.notificationSenderAccountId,
+        whitelistNumbers: payload.whitelistNumbers,
       };
     });
-    // Also update whitelist numbers via numberCheckManager's action
   },
 
   setWhitelistNumbers: (numbers) => set({ whitelistNumbers: numbers }),
-  addWhitelistNumbers: (numbers) => {
-    const socket = getWhatsappSocket();
-    if (!get().isSocketConnected) {
-      toast.error("Socket tidak terhubung. Coba lagi.");
-      return;
+  addWhitelistNumbers: async (numbers) => {
+    try {
+      const response = await fetch(
+        `${NEXT_PUBLIC_WHATSAPP_SERVER_URL}/setting/whitelist`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ numbers }),
+        }
+      );
+      if (!response.ok)
+        throw new Error("Gagal menambahkan nomor ke whitelist.");
+      const updatedSettings = await response.json();
+      set({ whitelistNumbers: updatedSettings.whitelistNumbers });
+      toast.success("Nomor berhasil ditambahkan ke whitelist.");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      toast.error(error.message || "Gagal menambahkan nomor ke whitelist.");
     }
-    const currentWhitelist = get().whitelistNumbers;
-    const uniqueNewNumbers = numbers.filter(
-      (num) => !currentWhitelist.includes(num)
-    );
-    const updatedWhitelist = [...currentWhitelist, ...uniqueNewNumbers];
-    socket.emit("whatsapp-set-whitelist", { numbers: updatedWhitelist });
-    get().resetGlobalError();
-    set({ whitelistNumbers: updatedWhitelist }); // Optimistic update
-    toast.success(`Menambahkan ${uniqueNewNumbers.length} nomor ke whitelist.`);
   },
-  removeWhitelistNumber: (number) => {
-    const socket = getWhatsappSocket();
-    if (!get().isSocketConnected) {
-      toast.error("Socket tidak terhubung. Coba lagi.");
-      return;
+  removeWhitelistNumber: async (number) => {
+    try {
+      const response = await fetch(
+        `${NEXT_PUBLIC_WHATSAPP_SERVER_URL}/setting/whitelist/${number}`,
+        {
+          method: "DELETE",
+        }
+      );
+      if (!response.ok)
+        throw new Error("Gagal menghapus nomor dari whitelist.");
+      const updatedSettings = await response.json();
+      set({ whitelistNumbers: updatedSettings.whitelistNumbers });
+      toast.success(`Nomor '${number}' dihapus dari whitelist.`);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      toast.error(error.message || "Gagal menghapus nomor dari whitelist.");
     }
-    socket.emit("whatsapp-remove-whitelist-number", { number });
-    get().resetGlobalError();
-    set((state) => ({
-      whitelistNumbers: state.whitelistNumbers.filter((num) => num !== number),
-    })); // Optimistic update
-    toast.success(`Nomor '${number}' dihapus dari whitelist.`);
   },
-  resetWhitelistNumbers: () => {
-    const socket = getWhatsappSocket();
-    if (!get().isSocketConnected) {
-      toast.error("Socket tidak terhubung. Coba lagi.");
-      return;
+  resetWhitelistNumbers: async () => {
+    try {
+      const response = await fetch(
+        `${NEXT_PUBLIC_WHATSAPP_SERVER_URL}/setting/whitelist/reset`,
+        {
+          method: "POST",
+        }
+      );
+      if (!response.ok) throw new Error("Gagal mereset whitelist.");
+      const updatedSettings = await response.json();
+      set({ whitelistNumbers: updatedSettings.whitelistNumbers });
+      toast.success("Daftar whitelist berhasil direset.");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      toast.error(error.message || "Gagal mereset whitelist.");
     }
-    socket.emit("whatsapp-reset-whitelist");
-    get().resetGlobalError();
-    set({ whitelistNumbers: [] }); // Optimistic update
-    toast.success("Daftar whitelist direset.");
   },
 
   // Socket Emitters (actions yang akan memicu event ke backend)
@@ -251,12 +273,6 @@ export const createClientManagerSlice: StateCreator<
       toast.error("Socket tidak terhubung. Coba lagi.");
       return;
     }
-    console.log(
-      "Frontend: Attempting to emit whatsapp-login-qr. Socket connected:",
-      socket.connected,
-      "Payload:",
-      { accountId, headless }
-    );
     const payload: LoginRequestPayload = {
       accountId,
       method: "qr",
@@ -283,12 +299,6 @@ export const createClientManagerSlice: StateCreator<
       toast.error("Socket tidak terhubung. Coba lagi.");
       return;
     }
-    console.log(
-      "Frontend: Attempting to emit whatsapp-logout. Socket connected:",
-      socket.connected,
-      "Payload:",
-      { accountId }
-    );
     const payload: LogoutRequestPayload = { accountId };
     socket.emit("whatsapp-logout", payload);
     get().resetGlobalError();
@@ -312,12 +322,6 @@ export const createClientManagerSlice: StateCreator<
       toast.error("Socket tidak terhubung. Coba lagi.");
       return;
     }
-    console.log(
-      "Frontend: Attempting to emit whatsapp-rename-client. Socket connected:",
-      socket.connected,
-      "Payload:",
-      { oldAccountId, newAccountId }
-    );
     if (!oldAccountId || !newAccountId || oldAccountId === newAccountId) {
       toast.error("Nama akun baru tidak valid atau sama dengan nama lama.");
       return;
@@ -334,7 +338,7 @@ export const createClientManagerSlice: StateCreator<
         newClientsMap.set(newAccountId, {
           ...oldClient,
           accountId: newAccountId,
-          status: "loading", // Set ke loading karena backend akan re-init
+          status: "loading",
           message: "Mengganti nama klien...",
         });
       }
@@ -348,12 +352,6 @@ export const createClientManagerSlice: StateCreator<
       toast.error("Socket tidak terhubung. Coba lagi.");
       return;
     }
-    console.log(
-      "Frontend: Attempting to emit whatsapp-delete-client. Socket connected:",
-      socket.connected,
-      "Payload:",
-      { accountId }
-    );
     if (!accountId) {
       toast.error("Account ID wajib diisi untuk penghapusan.");
       return;
@@ -372,12 +370,6 @@ export const createClientManagerSlice: StateCreator<
       toast.error("Socket tidak terhubung. Coba lagi.");
       return;
     }
-    console.log(
-      "Frontend: Attempting to emit whatsapp-disconnect-client. Socket connected:",
-      socket.connected,
-      "Payload:",
-      { accountId }
-    );
     if (!accountId) {
       toast.error("Account ID wajib diisi untuk memutuskan koneksi.");
       return;
@@ -405,9 +397,8 @@ export const createClientManagerSlice: StateCreator<
       toast.error("Socket tidak terhubung. Coba lagi.");
       return;
     }
-    socket.emit("whatsapp-disconnect-all-clients", {}); // Payload kosong
+    socket.emit("whatsapp-disconnect-all-clients", {});
     get().resetGlobalError();
-    // Optimistic update: Set semua klien ke disconnected di frontend
     set((state) => ({
       clients: state.clients.map((client) => ({
         ...client,
@@ -423,12 +414,6 @@ export const createClientManagerSlice: StateCreator<
       toast.error("Socket tidak terhubung. Coba lagi.");
       return;
     }
-    console.log(
-      "Frontend: Attempting to emit whatsapp-initialize-multiple-clients. Socket connected:",
-      socket.connected,
-      "Payload:",
-      { accountIds, headless }
-    );
     if (accountIds.length === 0) {
       toast.error("Pilih setidaknya satu akun untuk dijalankan.");
       return;
@@ -439,7 +424,6 @@ export const createClientManagerSlice: StateCreator<
     };
     socket.emit("whatsapp-initialize-multiple-clients", payload);
     get().resetGlobalError();
-    // Optimistic update: Set klien yang dipilih ke loading
     set((state) => ({
       clients: state.clients.map((client) => {
         if (accountIds.includes(client.accountId)) {
@@ -452,22 +436,5 @@ export const createClientManagerSlice: StateCreator<
         return client;
       }),
     }));
-  },
-  setNotificationSenderAccountId: (accountId) => {
-    const socket = getWhatsappSocket();
-    if (!get().isSocketConnected) {
-      toast.error("Socket tidak terhubung. Coba lagi.");
-      return;
-    }
-    console.log(
-      "Frontend: Attempting to emit whatsapp-set-notification-sender. Socket connected:",
-      socket.connected,
-      "Payload:",
-      { accountId }
-    );
-    const payload: SetNotificationSenderPayload = { accountId };
-    socket.emit("whatsapp-set-notification-sender", payload);
-    get().resetGlobalError();
-    set({ notificationSenderAccountId: accountId });
   },
 });

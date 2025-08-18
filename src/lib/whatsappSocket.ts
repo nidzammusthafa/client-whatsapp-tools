@@ -41,7 +41,6 @@ export const getWhatsappSocket = (): Socket => {
  */
 export const connectWhatsappSocket = () => {
   const socket = getWhatsappSocket();
-  console.log(socket);
   if (!socket.connected) {
     socket.connect();
   }
