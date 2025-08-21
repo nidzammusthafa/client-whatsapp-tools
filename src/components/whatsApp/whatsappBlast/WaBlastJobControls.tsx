@@ -43,6 +43,7 @@ interface WABlastJobControlsProps {
       whatsappWarmerMaxMessages: number;
       whatsappWarmerDelayMs: number;
       whatsappWarmerLanguage: "en" | "id";
+      warmerJobId: string;
       scheduledAt: string | undefined;
     },
     uploadedFileName: string | undefined,
@@ -78,6 +79,7 @@ const WABlastJobControls: React.FC<WABlastJobControlsProps> = ({
     whatsappWarmerMaxMessages,
     whatsappWarmerDelayMs,
     whatsappWarmerLanguage,
+    warmerJobId,
   } = useWhatsAppStore();
 
   return (
@@ -128,6 +130,7 @@ const WABlastJobControls: React.FC<WABlastJobControlsProps> = ({
                   whatsappWarmerMaxMessages: whatsappWarmerMaxMessages,
                   whatsappWarmerDelayMs: whatsappWarmerDelayMs,
                   whatsappWarmerLanguage: whatsappWarmerLanguage,
+                  warmerJobId: warmerJobId,
                   scheduledAt: scheduledAt
                     ? scheduledAt.toISOString()
                     : undefined,

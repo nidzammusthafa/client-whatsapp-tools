@@ -72,7 +72,6 @@ export interface WABlastProgressUpdate {
   totalRecipients: number;
   status: WABlastJobStatus;
   message: string;
-  // sentMessagesLog?: WABlastMessageLogEntry[]; // Log pesan yang sudah terkirim
   senderAccountIds?: string[]; // Akun pengirim yang digunakan
   minDelayMs?: number;
   maxDelayMs?: number;

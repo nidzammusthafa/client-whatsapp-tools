@@ -20,8 +20,7 @@ import {
   Plus,
   FilePlus,
   Settings,
-  List, // Icon baru untuk daftar pekerjaan
-  ArrowRight,
+  List,
   Terminal,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -73,7 +72,6 @@ const WABlastSection: React.FC = () => {
     setExcelColumns,
     selectedPhoneNumberColumn,
     setSelectedPhoneNumberColumn,
-    // Perubahan untuk WA Blast
     waBlastJobs, // Mengambil semua pekerjaan WA Blast
     setWaBlastJobs,
     currentSelectedWABlastJobId, // Mengambil ID pekerjaan yang sedang dipilih
@@ -94,7 +92,12 @@ const WABlastSection: React.FC = () => {
     setWhatsappWarmerDelayMs,
     whatsappWarmerLanguage,
     setWhatsappWarmerLanguage,
+    waWarmerJobs,
+    setWarmerJobId,
+    warmerJobId,
   } = useWhatsAppStore();
+
+  console.log(waBlastJobs);
 
   // State lokal untuk konfigurasi WA Blast
   const [selectedSenderAccountIds, setSelectedSenderAccountIds] = useState<
@@ -407,6 +410,7 @@ const WABlastSection: React.FC = () => {
       whatsappWarmerMaxMessages: whatsappWarmerMaxMessages,
       whatsappWarmerDelayMs: whatsappWarmerDelayMs,
       whatsappWarmerLanguage: whatsappWarmerLanguage,
+      warmerJobId: warmerJobId,
       scheduledAt: scheduledAt ? scheduledAt.toISOString() : undefined,
     };
 
@@ -515,13 +519,6 @@ const WABlastSection: React.FC = () => {
                         </Button>
                       </>
                     )}
-                    {currentSelectedWABlastJobId === job.jobId && (
-                      <div className="flex">
-                        <Button variant="secondary" size="sm">
-                          <ArrowRight className="h-4 w-4 mr-2" /> Sedang Dilihat
-                        </Button>
-                      </div>
-                    )}
                   </div>
                 </Card>
               ))}
@@ -539,11 +536,9 @@ const WABlastSection: React.FC = () => {
           </h3>
         ) : (
           <h3 className="text-lg font-semibold text-foreground mb-4">
-            Detail Pekerjaan: {currentSelectedWABlastJobId.substring(0, 8)}...
             <Button
               variant="outline"
               size="sm"
-              className="ml-4"
               onClick={() => setCurrentSelectedWABlastJobId(null)}
             >
               <Plus className="mr-2 h-4 w-4" /> Buat Pekerjaan Baru
@@ -945,6 +940,34 @@ const WABlastSection: React.FC = () => {
                       <SelectContent>
                         <SelectItem value="en">English</SelectItem>
                         <SelectItem value="bahasa">Bahasa Indonesia</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="warmer-job-id" className="text-foreground">
+                      Hubungkan WAWarmer
+                    </Label>
+                    <Select
+                      value={warmerJobId}
+                      onValueChange={(value: string) => setWarmerJobId(value)}
+                      disabled={isBlastRunning || !isSocketConnected}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Pilih WaWarmer" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.values(waWarmerJobs).map((job, idx) => {
+                          return (
+                            <SelectItem
+                              key={idx}
+                              value={job.jobId}
+                              className=""
+                            >
+                              {job.jobId.substring(0, 25)}... (
+                              {job.currentMessages}/{job.totalMessages})
+                            </SelectItem>
+                          );
+                        })}
                       </SelectContent>
                     </Select>
                   </div>

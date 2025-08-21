@@ -15,7 +15,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { ListPlus, Play, PlusCircle, PowerOff, RefreshCcw } from "lucide-react";
+import { ListPlus, Play, PlusCircle, PowerOff } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -31,7 +31,6 @@ import { toast } from "sonner";
 import LoginSection from "./LoginSection";
 import { useWhatsAppStore } from "@/stores/whatsapp";
 import WhitelistManager from "./WhiteListManager";
-import { reconnectWhatsappSocket } from "@/lib/whatsappSocket";
 import {
   Tooltip,
   TooltipContent,
@@ -255,22 +254,6 @@ const ClientListSection: React.FC = () => {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="flex-grow sm:flex-grow-0"
-                onClick={() => reconnectWhatsappSocket()} // Refresh halaman untuk memicu koneksi ulang socket
-              >
-                <RefreshCcw className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Refresh Koneksi Socket</p>
-            </TooltipContent>
-          </Tooltip>
         </div>
 
         {clients.length === 0 ? (

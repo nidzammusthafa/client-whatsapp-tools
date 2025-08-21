@@ -7,6 +7,7 @@ import { RefreshCcw } from "lucide-react";
 import { useWhatsAppStore } from "@/stores/whatsapp";
 import { Badge } from "@/components/ui/badge";
 import { getWhatsappSocket } from "@/lib/whatsappSocket";
+import { cn } from "@/lib/utils";
 
 /**
  * Sidebar yang menampilkan daftar chat.
@@ -110,8 +111,9 @@ const ConversationList = () => {
   };
 
   return (
-    <Card className="w-1/3 min-w-[300px] max-w-sm rounded-r-none border-r-0">
-      <CardContent className="p-0 h-full overflow-y-auto scrollbar-none">
+    <Card className="min-sm:w-1/3 min-w-[300px] max-w-sm min-sm:rounded-r-none min-sm:border-r-0">
+      {/* Mengukur ukuran div berdasarkan jumlah item */}
+      <CardContent className={cn("p-0 h-full overflow-y-auto scrollbar-none")}>
         <div className="p-4 border-b flex justify-between items-center">
           <h3 className="text-lg font-semibold">
             Semua Chat ({allChats.length})
@@ -124,6 +126,7 @@ const ConversationList = () => {
             <RefreshCcw className="h-4 w-4" />
           </Button>
         </div>
+
         {allChats.length === 0 ? (
           <div className="p-4 text-center text-muted-foreground">
             Tidak ada chat yang tersedia.
@@ -157,20 +160,22 @@ const ConversationList = () => {
                       {clientId}
                     </span>
                   </p>
-                  <p className="text-sm text-muted-foreground truncate justify-between flex mt-1">
-                    {chat.latestMessage.isMedia
-                      ? "MEDIA"
-                      : chat.latestMessage.isAudio
-                      ? "AUDIO"
-                      : chat.latestMessage.location
-                      ? "LOKASI"
-                      : chat.latestMessage.type === "vcard"
-                      ? "KONTAK"
-                      : chat.latestMessage.type === "sticker"
-                      ? "STIKER"
-                      : chat.latestMessage.type === "document"
-                      ? "DOKUMEN"
-                      : chat.latestMessage.body}
+                  <p className="text-sm text-muted-foreground truncate justify-between flex mt-1 ">
+                    <span className="overflow-hidden text-ellipsis whitespace-nowrap">
+                      {chat.latestMessage.isMedia
+                        ? "MEDIA"
+                        : chat.latestMessage.isAudio
+                        ? "AUDIO"
+                        : chat.latestMessage.location
+                        ? "LOKASI"
+                        : chat.latestMessage.type === "vcard"
+                        ? "KONTAK"
+                        : chat.latestMessage.type === "sticker"
+                        ? "STIKER"
+                        : chat.latestMessage.type === "document"
+                        ? "DOKUMEN"
+                        : chat.latestMessage.body}
+                    </span>
                     <span className="text-xs text-muted-foreground mt-1">
                       {new Date(chat.latestMessage.timestamp).toLocaleString()}
                     </span>

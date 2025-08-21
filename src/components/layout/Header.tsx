@@ -27,6 +27,7 @@ import {
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
 import LogoutButton from "./LogoutButton";
+import RefreshSocket from "./RefreshSocket";
 
 // Data untuk navigasi yang lebih deskriptif
 const components: { title: string; href: string; description: string }[] = [
@@ -184,10 +185,10 @@ const Header = () => {
           <DesktopNav />
         </div>
 
-        {/* Right-aligned container for navigation and theme toggle */}
         <div className="flex items-center space-x-4">
           <LogoutButton />
           <ThemeToggle />
+          <RefreshSocket />
           <MobileNav />
         </div>
       </div>

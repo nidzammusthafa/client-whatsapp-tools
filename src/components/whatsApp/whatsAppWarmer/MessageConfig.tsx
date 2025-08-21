@@ -44,14 +44,14 @@ export const MessageConfig: React.FC<{
           onClick={handleLoadMessagesEn}
           disabled={isWarmerRunning || !isSocketConnected}
         >
-          Muat Pesan Inggris
+          English
         </Button>
         <Button
           variant="outline"
           onClick={handleLoadMessagesId}
           disabled={isWarmerRunning || !isSocketConnected}
         >
-          Muat Pesan Bahasa Indonesia
+          Bahasa
         </Button>
       </div>
       <p className="text-sm text-muted-foreground">

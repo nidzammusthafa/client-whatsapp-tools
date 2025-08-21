@@ -98,6 +98,9 @@ const WAFormControls: React.FC<WAFormControlsProps> = ({
     whatsappWarmerMaxMessages,
     whatsappWarmerDelayMs,
     whatsappWarmerLanguage,
+    warmerJobId,
+    setWarmerJobId,
+    waWarmerJobs,
     setOriginalData,
     setEnableWhatsappWarmer,
     setWhatsappWarmerMinMessages,
@@ -497,6 +500,29 @@ const WAFormControls: React.FC<WAFormControlsProps> = ({
                 <SelectContent>
                   <SelectItem value="en">English</SelectItem>
                   <SelectItem value="bahasa">Bahasa Indonesia</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="warmer-job-id" className="text-foreground">
+                Hubungkan WAWarmer
+              </Label>
+              <Select
+                value={warmerJobId}
+                onValueChange={(value: string) => setWarmerJobId(value)}
+                disabled={isBlastRunning || !isSocketConnected}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Pilih WaWarmer..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.values(waWarmerJobs).map((job, idx) => {
+                    return (
+                      <SelectItem key={idx} value={job.jobId}>
+                        {job.jobId}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>

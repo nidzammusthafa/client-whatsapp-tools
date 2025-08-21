@@ -4,7 +4,14 @@ import React, { useEffect, useState, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCheck, Loader2, Send, Tag, XCircle } from "lucide-react";
+import {
+  CheckCheck,
+  Loader2,
+  Send,
+  Tag,
+  XCircle,
+  ArrowLeft,
+} from "lucide-react";
 import { useWhatsAppStore } from "@/stores/whatsapp";
 import { ConversationMessage } from "@/types";
 import MessageBubble from "./MessageBubble";
@@ -128,6 +135,7 @@ const ConversationWindow = ({ chatId, clientId }: ConversationWindowProps) => {
     markChatAsRead,
     addMessageToChat,
     isSocketConnected,
+    setSelectedChatId, // Tambahkan setSelectedChatId
   } = useWhatsAppStore(
     useShallow((state) => ({
       messagesByChatId: state.messagesByChatId,
@@ -137,6 +145,7 @@ const ConversationWindow = ({ chatId, clientId }: ConversationWindowProps) => {
       markChatAsRead: state.markChatAsRead,
       addMessageToChat: state.addMessageToChat,
       isSocketConnected: state.isSocketConnected,
+      setSelectedChatId: state.setSelectedChatId,
     }))
   );
   const { allLabels, setLabelForChat, loadAllLabels } = useWhatsAppStore(
@@ -227,9 +236,14 @@ const ConversationWindow = ({ chatId, clientId }: ConversationWindowProps) => {
     setReplyToMessage(message);
   };
 
+  const handleBack = () => {
+    setSelectedChatId(null);
+  };
+
   // FIX: Tambahkan fungsi handleEmojiClick
   const handleEmojiClick = (emojiData: EmojiClickData) => {
     setMessageInput((prevInput) => prevInput + emojiData.emoji);
+    setIsEmojiOpen(false);
   };
 
   const currentChatLabel = useMemo(() => {
@@ -249,25 +263,41 @@ const ConversationWindow = ({ chatId, clientId }: ConversationWindowProps) => {
   return (
     <div className="h-full flex flex-col">
       <CardHeader className="p-4 border-b flex justify-between items-center">
-        <div>
+        {/* Header mobile */}
+        <div className="md:hidden flex items-center">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleBack}
+            className="mr-2"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
           <CardTitle>{chatId.split("@")[0]}</CardTitle>
         </div>
-        <div className="flex gap-2">
-          <LabelSelector
-            chatId={chatId}
-            currentLabelIds={currentChatLabel ? [currentChatLabel.labelId] : []}
-            availableLabels={allLabels}
-            onSetLabel={(chatId, labelIds) =>
-              setLabelForChat(chatId, labelIds, lastMessage)
-            }
-          />
-          <Button
-            onClick={() => markChatAsRead(chatId, lastMessage)}
-            variant="secondary"
-            size="sm"
-          >
-            <CheckCheck className="h-4 w-4 mr-2" /> Tandai Sudah Dibaca
-          </Button>
+
+        {/* Header desktop */}
+        <div className="hidden md:flex flex-1 justify-between items-center">
+          <CardTitle>{chatId.split("@")[0]}</CardTitle>
+          <div className="flex gap-2">
+            <LabelSelector
+              chatId={chatId}
+              currentLabelIds={
+                currentChatLabel ? [currentChatLabel.labelId] : []
+              }
+              availableLabels={allLabels}
+              onSetLabel={(chatId, labelIds) =>
+                setLabelForChat(chatId, labelIds, lastMessage)
+              }
+            />
+            <Button
+              onClick={() => markChatAsRead(chatId, lastMessage)}
+              variant="secondary"
+              size="sm"
+            >
+              <CheckCheck className="h-4 w-4 mr-2" /> Tandai Sudah Dibaca
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="flex-1 p-4 overflow-y-auto scrollbar-none space-y-3">
@@ -291,7 +321,7 @@ const ConversationWindow = ({ chatId, clientId }: ConversationWindowProps) => {
         )}
         <div ref={messagesEndRef} />
       </CardContent>
-      <div className="p-4 border-t">
+      <div className="p-4">
         {replyToMessage && (
           <div className="mb-2 p-2 rounded-lg bg-muted border relative">
             <p className="text-sm font-semibold">

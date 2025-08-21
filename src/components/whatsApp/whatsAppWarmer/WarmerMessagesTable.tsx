@@ -42,7 +42,7 @@ function DataTablePagination({
       <div className="flex-1 text-sm text-muted-foreground whitespace-nowrap">
         Total {table.getFilteredRowModel().rows.length} baris data.
       </div>
-      <div className="flex items-center justify-center flex-wrap gap-y-2 gap-x-4">
+      <div className="flex items-center justify-end flex-wrap gap-y-2 gap-x-4">
         <div className="flex items-center gap-x-2">
           <p className="text-sm font-medium">Baris/hal</p>
           <select
@@ -312,7 +312,7 @@ export const WarmerMessagesTable: React.FC<{
           <Download className="mr-2 h-4 w-4" /> Ekspor Log Excel ({data.length})
         </Button>
       </div>
-      <div className="relative rounded-md border w-full max-h-[45vh] overflow-auto">
+      <div className="relative rounded-md border border-slate-800/50 w-full max-h-[45vh] overflow-auto">
         <table>
           <thead className="sticky top-0 z-10 bg-slate-50 dark:bg-neutral-900/90">
             {table.getHeaderGroups().map((headerGroup) => (
@@ -365,9 +365,9 @@ export const WarmerMessagesTable: React.FC<{
             )}
           </TableBody>
         </table>
-        <div className="sticky bottom-0 z-10 border-t bg-slate-50 p-2 dark:bg-neutral-900/90">
-          <DataTablePagination table={table} />
-        </div>
+      </div>
+      <div className="sticky bottom-0 z-10 border-t bg-slate-50 p-2 dark:bg-neutral-900/90">
+        <DataTablePagination table={table} />
       </div>
     </div>
   );

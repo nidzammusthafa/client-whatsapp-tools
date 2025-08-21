@@ -23,6 +23,7 @@ export const createWaBlastManagerSlice: StateCreator<
   whatsappWarmerMaxMessages: 10,
   whatsappWarmerDelayMs: 10000,
   whatsappWarmerLanguage: "en",
+  warmerJobId: "",
 
   setEnableWhatsappWarmer: (value) => set({ enableWhatsappWarmer: value }),
   setWhatsappWarmerMinMessages: (value) =>
@@ -31,6 +32,7 @@ export const createWaBlastManagerSlice: StateCreator<
     set({ whatsappWarmerMaxMessages: value }),
   setWhatsappWarmerDelayMs: (value) => set({ whatsappWarmerDelayMs: value }),
   setWhatsappWarmerLanguage: (value) => set({ whatsappWarmerLanguage: value }),
+  setWarmerJobId: (value) => set({ warmerJobId: value }),
 
   // Actions for WA Blast
   setWaBlastJobs: (jobs) => set({ waBlastJobs: jobs }),

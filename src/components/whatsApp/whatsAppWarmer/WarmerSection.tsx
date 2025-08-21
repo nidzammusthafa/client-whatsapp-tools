@@ -11,7 +11,8 @@ import { MessageConfig } from "./MessageConfig";
 import { DelayConfig } from "./DelayConfig";
 import { ControlButtons } from "./ControlButton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal } from "lucide-react";
+import { List, Terminal } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const WarmerSection: React.FC = () => {
   const {
@@ -19,9 +20,13 @@ const WarmerSection: React.FC = () => {
     isSocketConnected,
     startWarmer,
     warmerJobStatus,
+    setWarmerJobStatus,
+    setCurrentWarmerJobId,
+    waWarmerJobs,
     pauseWarmer,
     resumeWarmer,
     stopWarmer,
+    removeWarmerJob,
   } = useWhatsAppStore();
 
   const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
@@ -38,6 +43,26 @@ const WarmerSection: React.FC = () => {
   const availableClients = clients.filter(
     (c) => c.status === "ready" || c.status === "authenticated"
   );
+
+  const warmerJobs = Object.values(waWarmerJobs).map((job) => ({
+    ...job,
+    currentMessages:
+      warmerJobStatus?.jobId === job.jobId
+        ? warmerJobStatus.currentMessages
+        : job.currentMessages,
+    totalMessages:
+      warmerJobStatus?.jobId === job.jobId
+        ? warmerJobStatus.totalMessages
+        : job.totalMessages,
+    message:
+      warmerJobStatus?.jobId === job.jobId
+        ? warmerJobStatus.message
+        : job.error || "",
+    sentMessagesLog:
+      warmerJobStatus?.jobId === job.jobId
+        ? warmerJobStatus.sentMessagesLog
+        : job.sentMessagesLog || [],
+  }));
 
   const handleClientSelection = (accountId: string, checked: boolean) => {
     setSelectedClientIds((prev) =>
@@ -95,7 +120,7 @@ const WarmerSection: React.FC = () => {
     });
   };
 
-  const handlePauseResumeStop = (action: "pause" | "resume" | "stop") => {
+  const handleWarmerActions = (action: "pause" | "resume" | "stop") => {
     const jobId = warmerJobStatus?.jobId;
     if (!jobId) {
       toast.error("Tidak ada pekerjaan warmer yang sedang berjalan.");
@@ -104,6 +129,25 @@ const WarmerSection: React.FC = () => {
     if (action === "pause") pauseWarmer(jobId);
     if (action === "resume") resumeWarmer(jobId);
     if (action === "stop") stopWarmer(jobId);
+  };
+
+  const handleEditButton = () => {
+    /* Mengisi semua data form dengan data dari database */
+    if (warmerJobStatus) {
+      setSelectedClientIds(
+        waWarmerJobs[warmerJobStatus.jobId].selectedAccountIds
+      );
+      setTotalMessages(warmerJobStatus.totalMessages);
+      setDelayAfterNMessages(
+        waWarmerJobs[warmerJobStatus.jobId].delayAfterNMessages
+      );
+      setDelayAfterNMessagesSeconds(
+        waWarmerJobs[warmerJobStatus.jobId].delayAfterNMessagesMs / 1000
+      );
+      setMinDelay(waWarmerJobs[warmerJobStatus.jobId].minDelayMs / 1000);
+      setMaxDelay(waWarmerJobs[warmerJobStatus.jobId].maxDelayMs / 1000);
+      setMessagesInput(waWarmerJobs[warmerJobStatus.jobId].messages.join("\n"));
+    }
   };
 
   const isWarmerRunning =
@@ -133,6 +177,81 @@ const WarmerSection: React.FC = () => {
   return (
     <Card className="w-full mx-auto rounded-lg shadow-xl border">
       <CardContent className="p-6 space-y-6">
+        {/* Bagian daftar Pekerjaan WaWarmer */}
+        {Object.keys(waWarmerJobs).length > 0 && (
+          <div className="space-y-4 border rounded-md p-4 bg-muted">
+            <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+              <List className="h-5 w-5" /> Pekerjaan WA Warmer Aktif
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {Object.values(warmerJobs).map((job) => (
+                <Card
+                  key={job.jobId}
+                  className={`p-3 border rounded-md cursor-pointer transition-all ${
+                    warmerJobStatus?.jobId === job.jobId
+                      ? "border-primary-foreground shadow-md bg-primary/10"
+                      : "hover:bg-accent/50"
+                  }`}
+                  onClick={() => {
+                    setWarmerJobStatus({
+                      jobId: job.jobId,
+                      currentMessages: job.currentMessages,
+                      totalMessages: job.totalMessages,
+                      status: job.status,
+                      message: job.error || "",
+                      sentMessagesLog: job.sentMessagesLog || [],
+                    });
+                    setCurrentWarmerJobId(job.jobId);
+                  }}
+                >
+                  <div className="flex items-center justify-between text-sm font-medium">
+                    <span className="truncate flex-1">{job.jobId}</span>
+                    <span
+                      className={`ml-2 px-2 py-1 rounded-full text-xs font-semibold ${
+                        job.status === "RUNNING"
+                          ? "bg-green-500/20 text-green-600"
+                          : job.status === "PAUSED"
+                          ? "bg-yellow-500/20 text-yellow-600"
+                          : "bg-gray-500/20 text-gray-600"
+                      }`}
+                    >
+                      {job.status.toUpperCase()}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {job.currentMessages}/{job.totalMessages} Penerima
+                  </p>
+                  <div className="flex justify-end gap-2 mt-2">
+                    {job.status !== "RUNNING" && (
+                      <>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => {
+                            removeWarmerJob(job.jobId);
+                            setWarmerJobStatus(null);
+                          }}
+                        >
+                          Hapus
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={handleEditButton}
+                        >
+                          Edit
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </Card>
+              ))}
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Pilih pekerjaan di atas untuk melihat detail progres dan log.
+            </p>
+          </div>
+        )}
         <ClientSelection
           availableClients={availableClients}
           selectedClientIds={selectedClientIds}
@@ -179,9 +298,9 @@ const WarmerSection: React.FC = () => {
         <ControlButtons
           warmerJobStatus={warmerJobStatus}
           handleStartWarmer={handleStartWarmer}
-          handlePauseWarmer={() => handlePauseResumeStop("pause")}
-          handleResumeWarmer={() => handlePauseResumeStop("resume")}
-          handleStopWarmer={() => handlePauseResumeStop("stop")}
+          handlePauseWarmer={() => handleWarmerActions("pause")}
+          handleResumeWarmer={() => handleWarmerActions("resume")}
+          handleStopWarmer={() => handleWarmerActions("stop")}
           isSocketConnected={isSocketConnected}
           isStartDisabled={
             !isSocketConnected ||

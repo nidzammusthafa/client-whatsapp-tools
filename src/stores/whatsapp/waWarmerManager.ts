@@ -28,7 +28,7 @@ export const createWaWarmerManagerSlice: StateCreator<
       warmerMessagesLog: [...state.warmerMessagesLog, entry],
     })),
   resetWarmerMessagesLog: () => set({ warmerMessagesLog: [] }),
-  generateNewWarmerJobId: () => set({ currentWarmerJobId: uuidv4() }),
+  setCurrentWarmerJobId: (jobId) => set({ currentWarmerJobId: jobId }),
 
   startWarmer: (selectedAccountIds, totalMessages, messages, delayConfig) => {
     const socket = getWhatsappSocket();
@@ -51,7 +51,7 @@ export const createWaWarmerManagerSlice: StateCreator<
     }
 
     state.resetWarmerMessagesLog(); // Bersihkan log sebelumnya
-    state.generateNewWarmerJobId(); // Generate ID job baru
+    state.setCurrentWarmerJobId(uuidv4()); // Generate ID job baru
     const payload: StartWarmerPayload = {
       jobId: state.currentWarmerJobId,
       selectedAccountIds,
@@ -98,6 +98,38 @@ export const createWaWarmerManagerSlice: StateCreator<
     get().resetGlobalError();
     get().setWarmerJobStatus(null);
     get().resetWarmerMessagesLog();
-    get().generateNewWarmerJobId();
+    get().setCurrentWarmerJobId(uuidv4());
+  },
+  removeWarmerJob: (jobId) => {
+    const socket = getWhatsappSocket();
+    if (!get().isSocketConnected) {
+      toast.error("Socket tidak terhubung. Coba lagi.");
+      return;
+    }
+    socket.emit("whatsapp-remove-warmer", { jobId });
+    get().resetGlobalError();
+    set((state) => {
+      const newJobs = { ...state.waWarmerJobs };
+      delete newJobs[jobId];
+      return { waWarmerJobs: newJobs };
+    });
+  },
+  getWarmerJob: (jobId) => {
+    const socket = getWhatsappSocket();
+    if (!get().isSocketConnected) {
+      toast.error("Socket tidak terhubung. Coba lagi.");
+      return;
+    }
+    socket.emit("whatsapp-get-warmer-job", { jobId });
+    get().resetGlobalError();
+  },
+  getAllWarmerJobs: () => {
+    const socket = getWhatsappSocket();
+    if (!get().isSocketConnected) {
+      toast.error("Socket tidak terhubung. Coba lagi.");
+      return;
+    }
+    socket.emit("whatsapp-get-all-warmer-jobs");
+    get().resetGlobalError();
   },
 });

@@ -164,7 +164,7 @@ export const WhatsAppDashboard = () => {
             className="border-muted-foreground/10"
             value="check-numbers"
           >
-            Check WhatsApp Numbers
+            Check Numbers
           </TabsTrigger>
           <TabsTrigger
             className="border-muted-foreground/10"

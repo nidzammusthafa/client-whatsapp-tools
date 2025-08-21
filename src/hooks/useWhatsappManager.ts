@@ -10,10 +10,12 @@ import {
   StoredMessage,
   InitialSettingsPayload,
   StartWABlastPayload,
+  WarmerJob,
 } from "@/types";
 import { useEffect } from "react";
 import { Socket } from "socket.io-client";
 import { toast } from "sonner"; // Import toast for messages
+import { v4 as uuidv4 } from "uuid";
 
 /**
  * Custom hook untuk mengelola koneksi dan event Socket.IO,
@@ -33,7 +35,7 @@ export const useWhatsAppManager = () => {
     setWarmerJobStatus,
     addWarmerMessageLogEntry,
     resetWarmerMessagesLog,
-    generateNewWarmerJobId,
+    setCurrentWarmerJobId,
     setWaBlastJobs,
     updateWaBlastJobStatus,
     addWABlastMessageLogEntry,
@@ -49,7 +51,6 @@ export const useWhatsAppManager = () => {
   const socket: Socket = getWhatsappSocket();
 
   useEffect(() => {
-    // Pastikan socket terhubung saat komponen dimuat
     connectWhatsappSocket();
 
     // Event listener untuk koneksi socket
@@ -60,10 +61,10 @@ export const useWhatsAppManager = () => {
 
       // Setelah terhubung, minta semua status klien yang sudah ada
       socket.emit("whatsapp-get-client-status-all");
-      loadStoredMessages(); // Muat pesan tersimpan saat koneksi
+      loadStoredMessages();
       socket.emit("whatsapp-get-initial-settings"); // Minta pengaturan awal, termasuk whitelist
-      // BARU: Minta semua status WA Blast yang sedang berjalan saat koneksi
       socket.emit("whatsapp-get-all-blast-jobs");
+      socket.emit("whatsapp-get-all-warmer-jobs");
     };
 
     // Event listener untuk pemutusan koneksi socket
@@ -76,7 +77,7 @@ export const useWhatsAppManager = () => {
       generateNewNumberCheckJobId(); // Generate ID baru untuk job berikutnya
       setWarmerJobStatus(null); // Reset status job warmer
       resetWarmerMessagesLog(); // Bersihkan log pesan warmer
-      generateNewWarmerJobId(); // Generate ID baru untuk job warmer berikutnya
+      setCurrentWarmerJobId(uuidv4()); // Generate ID baru untuk job warmer berikutnya
       setWaBlastJobs({}); // BARU: Reset semua job WA Blast saat terputus
       setCurrentSelectedWABlastJobId(null); // BARU: Reset pilihan job
     };
@@ -90,7 +91,8 @@ export const useWhatsAppManager = () => {
       generateNewNumberCheckJobId();
       setWarmerJobStatus(null);
       resetWarmerMessagesLog();
-      generateNewWarmerJobId();
+      setWarmerJobStatus(null);
+      setCurrentWarmerJobId(uuidv4());
       setWaBlastJobs({}); // BARU: Reset semua job WA Blast saat error koneksi
       setCurrentSelectedWABlastJobId(null); // BARU: Reset pilihan job
     };
@@ -159,19 +161,33 @@ export const useWhatsAppManager = () => {
     };
 
     // Event listener untuk mendapatkan semua pekerjaan waWarmer yang aktif
-    const onWarmerJobs = (jobs: WarmerProgressUpdate[]) => {
-      const jobsMap: Record<string, WarmerProgressUpdate> = {};
+    const onWarmerJobs = (jobs: WarmerJob[]) => {
+      const jobsMap: Record<string, WarmerJob> = {};
       jobs.forEach((job) => {
         jobsMap[job.jobId] = job;
       });
 
-      console.log("onWarmerJobs", jobsMap);
       setWaWarmerJobs(jobsMap);
     };
 
     // Event listener untuk update progress pekerjaan warmer
     const onWarmerProgress = (update: WarmerProgressUpdate) => {
       setWarmerJobStatus(update);
+    };
+
+    // Event listener untuk single job warmer
+    const onSingleWarmerJob = (job: WarmerProgressUpdate) => {
+      setWarmerJobStatus(job);
+    };
+
+    // Event listener untuk semua pekerjaan warmer
+    const onAllWarmerJobs = (jobs: WarmerJob[]) => {
+      const jobsMap: Record<string, WarmerJob> = {};
+      console.log(jobs);
+      jobs.forEach((job) => {
+        jobsMap[job.jobId] = job;
+      });
+      setWaWarmerJobs(jobsMap);
     };
 
     // Event listener untuk setiap pesan yang dikirim oleh warmer
@@ -284,7 +300,9 @@ export const useWhatsAppManager = () => {
     socket.on("existing-whatsapp-clients", onExistingClients);
     socket.on("whatsapp-error", onWhatsAppError);
     socket.on("whatsapp-number-check-progress", onNumberCheckProgress);
-    socket.on("whatsapp-all-active-warmer-jobs", onWarmerJobs);
+    socket.on("whatsapp-get-warmer-job", onSingleWarmerJob);
+    socket.on("whatsapp-all-warmer-jobs", onAllWarmerJobs);
+    socket.on("whatsapp-get-all-warmer-jobs", onWarmerProgress);
     socket.on("whatsapp-warmer-progress", onWarmerProgress);
     socket.on("whatsapp-warmer-message-sent", onWarmerMessageSent);
     socket.on("whatsapp-blast-progress", onWABlastProgress);
@@ -310,6 +328,8 @@ export const useWhatsAppManager = () => {
       socket.off("whatsapp-error", onWhatsAppError);
       socket.off("whatsapp-number-check-progress", onNumberCheckProgress);
       socket.off("whatsapp-all-active-warmer-jobs", onWarmerJobs);
+      socket.off("whatsapp-get-warmer-job", onSingleWarmerJob);
+      socket.off("whatsapp-all-warmer-jobs", onAllWarmerJobs);
       socket.off("whatsapp-warmer-progress", onWarmerProgress);
       socket.off("whatsapp-warmer-message-sent", onWarmerMessageSent);
       socket.off("whatsapp-blast-progress", onWABlastProgress);
@@ -320,9 +340,9 @@ export const useWhatsAppManager = () => {
       socket.off("whatsapp-stored-message-updated", onStoredMessageUpdated);
       socket.off("whatsapp-initial-settings", onInitialSettings);
       socket.off("whatsapp-whitelist-updated", onWhitelistUpdated);
-      socket.off("whatsapp-all-active-blast-jobs", onAllActiveBlastJobs); // BARU: Hapus listener ini
-      socket.off("whatsapp-blast-all-jobs", onAllBlastJobs); // BARU: Hapus listener ini
-      socket.off("whatsapp-blast-job-removed", onWABlastJobRemoved); // BARU: Hapus listener ini
+      socket.off("whatsapp-all-active-blast-jobs", onAllActiveBlastJobs);
+      socket.off("whatsapp-blast-all-jobs", onAllBlastJobs);
+      socket.off("whatsapp-blast-job-removed", onWABlastJobRemoved);
       socket.off("whatsapp-blast-job-for-edit", onEditWABlastJob);
     };
   }, [
@@ -338,7 +358,7 @@ export const useWhatsAppManager = () => {
     setWarmerJobStatus,
     addWarmerMessageLogEntry,
     resetWarmerMessagesLog,
-    generateNewWarmerJobId,
+    setCurrentWarmerJobId,
     addWABlastMessageLogEntry,
     setStoredMessages,
     loadStoredMessages,

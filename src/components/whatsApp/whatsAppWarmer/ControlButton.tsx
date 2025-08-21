@@ -1,9 +1,9 @@
 import { Button } from "@/components/ui/button";
+import { WarmerProgressUpdate } from "@/types";
 import { MessageCircleMore, Pause, Play, StopCircle } from "lucide-react";
 
 export const ControlButtons: React.FC<{
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  warmerJobStatus: any;
+  warmerJobStatus: WarmerProgressUpdate | null;
   handleStartWarmer: () => void;
   handlePauseWarmer: () => void;
   handleResumeWarmer: () => void;

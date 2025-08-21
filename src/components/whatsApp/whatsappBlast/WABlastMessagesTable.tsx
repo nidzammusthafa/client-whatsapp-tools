@@ -39,7 +39,7 @@ function DataTablePagination({
       <div className="flex-1 text-sm text-muted-foreground whitespace-nowrap">
         Total {table.getFilteredRowModel().rows.length} baris data.
       </div>
-      <div className="flex items-center justify-center flex-wrap gap-y-2 gap-x-4">
+      <div className="flex items-center justify-end flex-wrap gap-y-2 gap-x-4">
         <div className="flex items-center gap-x-2">
           <p className="text-sm font-medium">Baris/hal</p>
           <select

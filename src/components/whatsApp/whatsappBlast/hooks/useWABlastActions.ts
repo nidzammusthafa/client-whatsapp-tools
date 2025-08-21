@@ -38,6 +38,7 @@ export const useWABlastActions = () => {
       whatsappWarmerDelayMs: number;
       whatsappWarmerLanguage: "en" | "id";
       scheduledAt: string | undefined;
+      warmerJobId: string;
     },
     uploadedFileName: string | undefined,
     scheduledAt: Date | undefined
