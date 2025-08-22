@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/sonner";
 import Header from "@/components/layout/Header";
 import { AuthProvider } from "@/components/providers/auth-providers";
 import { NotificationPermission } from "@/components/notificationPermission";
+import { DialogProvider } from "@/components/providers/DialogProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -39,12 +40,14 @@ export default function RootLayout({
               "/wa",
             ]}
           >
-            <Header />
-            <main className="container max-w-screen px-2 sm:px4">
-              {children}
-              <NotificationPermission />
-            </main>
-            <Toaster expand={true} closeButton theme="dark" richColors />
+            <DialogProvider>
+              <Header />
+              <main className="container max-w-screen px-2 sm:px4">
+                {children}
+                <NotificationPermission />
+              </main>
+              <Toaster expand={true} closeButton theme="dark" richColors />
+            </DialogProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

@@ -1,9 +1,10 @@
 import { io, Socket } from "socket.io-client";
+import { toast } from "sonner";
 
-// URL backend Socket.IO Anda
-// Sesuaikan jika backend Anda berjalan di port atau domain yang berbeda
-const SOCKET_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+const SOCKET_URL = prompt(
+  "Masukkan URL backend Socket.IO:",
+  "http://localhost:5000"
+);
 
 // Instance socket untuk namespace WhatsApp
 let whatsappSocket: Socket | null = null;
@@ -29,8 +30,15 @@ export const getWhatsappSocket = (): Socket => {
       console.warn(`Terputus dari namespace WhatsApp Socket.IO: ${reason}`);
     });
 
-    whatsappSocket.on("connect_error", (error) => {
+    whatsappSocket.on("connect_error", async (error) => {
       console.error("Kesalahan koneksi Socket.IO:", error.message);
+      toast.error(
+        `Gagal terhubung ke server WhatsApp. Pastikan server berjalan.`,
+        {
+          description: error.message,
+          duration: 5000,
+        }
+      );
     });
   }
   return whatsappSocket;
