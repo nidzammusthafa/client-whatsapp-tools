@@ -20,7 +20,6 @@ import { ConversationMessage } from "@/types";
 import { toast } from "sonner";
 import WABlastSection from "./whatsappBlast/WaBlastSection";
 import { Address } from "@/types/whatsapp/address";
-import ExcelDataManagement from "./address/ExcelDataManagement";
 import AddressTable from "./address/AddressTable";
 import AddressDialog from "./address/AddressDialog";
 
