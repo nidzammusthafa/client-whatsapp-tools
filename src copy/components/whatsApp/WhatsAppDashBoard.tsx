@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import { Terminal } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PaginationState } from "@tanstack/react-table";
 
 import ClientListSection from "./client/ClientListSection";
 import NumberCheckSection from "./numberChecker/NumberCheckSection";
@@ -22,7 +21,6 @@ import WABlastSection from "./whatsappBlast/WaBlastSection";
 import { Address } from "@/types/whatsapp/address";
 import ExcelDataManagement from "./address/ExcelDataManagement";
 import AddressTable from "./address/AddressTable";
-import AddressDialog from "./address/AddressDialog";
 
 const NEXT_PUBLIC_WHATSAPP_SERVER_URL =
   process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000/api/whatsapp";
@@ -50,37 +48,22 @@ export const WhatsAppDashboard = () => {
   const initialSettingsLoaded = useWhatsAppStore(
     (state) => state.initialSettingsLoaded
   );
+  // const resetGlobalError = useWhatsAppStore((state) => state.resetGlobalError);
 
   // State lokal untuk manajemen alamat
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
-    pageSize: 10,
-  });
-  const [globalFilter, setGlobalFilter] = useState<string>("");
-  const [pageCount, setPageCount] = useState<number>(0);
-  const [totalData, setTotalData] = useState<number>(0);
 
   // Fungsi untuk mengambil data alamat dari API
-  const fetchAddresses = useCallback(async () => {
+  const fetchAddresses = async () => {
     setIsLoading(true);
     try {
-      const params = new URLSearchParams({
-        page: (pagination.pageIndex + 1).toString(),
-        limit: pagination.pageSize.toString(),
-        search: globalFilter,
-      });
       const response = await fetch(
-        `${NEXT_PUBLIC_WHATSAPP_SERVER_URL}/address?${params.toString()}`
+        `${NEXT_PUBLIC_WHATSAPP_SERVER_URL}/address`
       );
       const result = await response.json();
-      if (response.ok && result.data) {
-        setAddresses(result.data || []);
-        setPageCount(
-          Math.ceil(result.pagination.total / result.pagination.limit) || 0
-        );
-        setTotalData(result.pagination.total || 0);
+      if (response.ok) {
+        setAddresses(result.data);
       } else {
         toast.error(result.message || "Gagal mengambil data alamat.");
       }
@@ -89,53 +72,20 @@ export const WhatsAppDashboard = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [pagination, globalFilter]);
-
-  const handleAddressEdited = async (
-    id: string,
-    updatedData: Partial<Address>
-  ) => {
-    try {
-      const response = await fetch(
-        `${NEXT_PUBLIC_WHATSAPP_SERVER_URL}/address/${id}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(updatedData),
-        }
-      );
-
-      if (response.ok) {
-        toast.success("Data berhasil diperbarui.");
-        fetchAddresses();
-      } else {
-        const result = await response.json();
-        toast.error(result.message || "Gagal memperbarui data.");
-      }
-    } catch {
-      toast.error("Terjadi kesalahan saat memperbarui data.");
-    }
   };
 
-  const handleAddressDeleted = async (id: string) => {
-    try {
-      const response = await fetch(
-        `${NEXT_PUBLIC_WHATSAPP_SERVER_URL}/address/${id}`,
-        {
-          method: "DELETE",
-        }
-      );
+  const handleAddressEdited = (id: string, updatedData: Partial<Address>) => {
+    setAddresses((prev) =>
+      prev.map((address) =>
+        address.id === id
+          ? ({ ...address, ...updatedData } as Address)
+          : address
+      )
+    );
+  };
 
-      if (response.ok) {
-        toast.success("Data berhasil dihapus.");
-        fetchAddresses();
-      } else {
-        const result = await response.json();
-        toast.error(result.message || "Gagal menghapus data.");
-      }
-    } catch {
-      toast.error("Terjadi kesalahan saat menghapus data.");
-    }
+  const handleAddressDeleted = () => {
+    fetchAddresses();
   };
 
   // Efek untuk memantau klien dengan status 'qr' dan menampilkan dialog
@@ -162,11 +112,9 @@ export const WhatsAppDashboard = () => {
     if (isSocketConnected && !initialSettingsLoaded) {
       loadInitialSettings();
     }
-  }, [isSocketConnected, initialSettingsLoaded, loadInitialSettings]);
-
-  useEffect(() => {
+    // Muat data alamat saat komponen dimuat
     fetchAddresses();
-  }, [fetchAddresses]);
+  }, [isSocketConnected, initialSettingsLoaded, loadInitialSettings]);
 
   useEffect(() => {
     const socket = getWhatsappSocket();
@@ -319,19 +267,13 @@ export const WhatsAppDashboard = () => {
         {/* Konten untuk Manajemen Alamat */}
         <TabsContent value="address-management" className="mt-4">
           <div className="space-y-6">
-            <AddressDialog onDataSubmitted={fetchAddresses} />
+            <ExcelDataManagement onDataSubmitted={fetchAddresses} />
             <AddressTable
               data={addresses}
-              isLoading={isLoading}
-              onRefresh={fetchAddresses}
               onDataDeleted={handleAddressDeleted}
               onDataEdited={handleAddressEdited}
-              pageCount={pageCount}
-              totalData={totalData}
-              pagination={pagination}
-              setPagination={setPagination}
-              globalFilter={globalFilter}
-              setGlobalFilter={setGlobalFilter}
+              onRefresh={fetchAddresses}
+              isLoading={isLoading}
             />
           </div>
         </TabsContent>
