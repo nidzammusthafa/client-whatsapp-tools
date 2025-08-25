@@ -21,4 +21,6 @@ export interface Address {
   businessName?: string | null;
   businessCategory?: string | null;
   hasReceivedMessage: boolean;
+  createdAt: string | null;
+  updatedAt: string | null;
 }

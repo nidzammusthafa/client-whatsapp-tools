@@ -13,16 +13,17 @@ import { useWhatsAppManager } from "@/hooks/useWhatsappManager";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import QrCodeDialog from "./client/QRCodeDialog";
 import { useWhatsAppStore } from "@/stores/whatsapp";
-import { ConversationDashboard } from "./conversation/ConversationDashboard";
+import { ConversationDashboard } from "./conversation/ConversationDashboard"; // Assuming this import is correct
 import { getWhatsappSocket } from "@/lib/whatsappSocket";
 import { showNotification } from "@/lib/notificationUtils";
 import { ConversationMessage } from "@/types";
 import { toast } from "sonner";
 import WABlastSection from "./whatsappBlast/WaBlastSection";
 import { Address } from "@/types/whatsapp/address";
-import AddressTable from "./address/AddressTable";
 import AddressDialog from "./address/AddressDialog";
+import AddressTable from "./address/AddressTable";
 
+import { SortingState } from "@tanstack/react-table";
 const NEXT_PUBLIC_WHATSAPP_SERVER_URL =
   process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000/api/whatsapp";
 
@@ -61,6 +62,7 @@ export const WhatsAppDashboard = () => {
   const [pageCount, setPageCount] = useState<number>(0);
   const [totalData, setTotalData] = useState<number>(0);
 
+  const [sorting, setSorting] = useState<SortingState>([]);
   // Fungsi untuk mengambil data alamat dari API
   const fetchAddresses = useCallback(async () => {
     setIsLoading(true);
@@ -69,9 +71,12 @@ export const WhatsAppDashboard = () => {
         page: (pagination.pageIndex + 1).toString(),
         limit: pagination.pageSize.toString(),
         search: globalFilter,
+        sortBy: sorting.length > 0 ? sorting[0].id : "",
+        sortOrder: sorting.length > 0 ? (sorting[0].desc ? "desc" : "asc") : "",
       });
       const response = await fetch(
-        `${NEXT_PUBLIC_WHATSAPP_SERVER_URL}/address?${params.toString()}`
+        `${NEXT_PUBLIC_WHATSAPP_SERVER_URL}/address?${params.toString()}`,
+        { cache: "no-store" } // Tambahkan ini untuk memastikan data selalu baru
       );
       const result = await response.json();
       if (response.ok && result.data) {
@@ -86,9 +91,9 @@ export const WhatsAppDashboard = () => {
     } catch {
       toast.error("Terjadi kesalahan saat mengambil data alamat.");
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Pastikan isLoading diatur ke false setelah selesai
     }
-  }, [pagination, globalFilter]);
+  }, [pagination.pageIndex, pagination.pageSize, globalFilter, sorting]);
 
   const handleAddressEdited = async (
     id: string,
@@ -285,7 +290,7 @@ export const WhatsAppDashboard = () => {
             className="border-muted-foreground/10"
             value="address-management"
           >
-            Kelola Alamat
+            Kelola Data
           </TabsTrigger>
         </TabsList>
 
@@ -331,6 +336,8 @@ export const WhatsAppDashboard = () => {
               setPagination={setPagination}
               globalFilter={globalFilter}
               setGlobalFilter={setGlobalFilter}
+              sorting={sorting}
+              setSorting={setSorting}
             />
           </div>
         </TabsContent>

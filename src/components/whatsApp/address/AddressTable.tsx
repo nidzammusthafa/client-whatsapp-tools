@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState, useCallback } from "react";
+import React, { useMemo, useState, useCallback, useEffect } from "react";
 import {
   ColumnDef,
   useReactTable,
@@ -11,6 +11,7 @@ import {
   getFilteredRowModel,
   flexRender,
   PaginationState,
+  RowSelectionState,
 } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +33,7 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  FileDown,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -44,13 +46,82 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Address } from "@/types/whatsapp/address";
+import { formatDate } from "@/lib/utils";
+
+// Deklarasi global untuk library XLSX
+declare const XLSX: typeof import("xlsx");
+
+// Asumsikan AddressService diimpor dari file terpisah yang berisi fungsi API
+// Ini adalah mock API client, Anda perlu mengimplementasikannya sesuai server Express Anda
+const AddressService = {
+  deleteMany: async (ids: string[]) => {
+    const response = await fetch("/api/address/delete-many", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids }),
+    });
+    if (!response.ok) {
+      throw new Error("Gagal menghapus data.");
+    }
+    return response.json();
+  },
+  updateReceivedMessageStatus: async (ids: string[], status: boolean) => {
+    const response = await fetch("/api/address/update-status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids, status }),
+    });
+    if (!response.ok) {
+      throw new Error("Gagal memperbarui status.");
+    }
+    return response.json();
+  },
+  getAll: async (
+    page: number,
+    limit: number,
+    skip: number,
+    search: string,
+    sortBy: string,
+    sortOrder: "asc" | "desc"
+  ) => {
+    const response = await fetch(
+      `/api/address/get-all?page=${page}&limit=${limit}&skip=${skip}&search=${search}&sortBy=${sortBy}&sortOrder=${sortOrder}`
+    );
+    if (!response.ok) {
+      throw new Error("Gagal mengambil data.");
+    }
+    return response.json();
+  },
+  delete: async (id: string) => {
+    const response = await fetch(`/api/address/delete/${id}`, {
+      method: "DELETE",
+    });
+    if (!response.ok) {
+      throw new Error("Gagal menghapus data.");
+    }
+    return response.json();
+  },
+  update: async (id: string, data: Partial<Address>) => {
+    const response = await fetch(`/api/address/update/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      throw new Error("Gagal memperbarui data.");
+    }
+    return response.json();
+  },
+};
 
 interface DataTablePaginationProps {
   table: ReturnType<typeof useReactTable<Address>>;
   totalData: number;
 }
 
+// Asumsikan DataTablePagination ada di file ini atau diimpor
 function DataTablePagination({ table, totalData }: DataTablePaginationProps) {
   return (
     <div className="flex items-center justify-between flex-wrap gap-y-4 gap-x-6 px-2">
@@ -131,6 +202,8 @@ interface AddressTableProps {
   setPagination: React.Dispatch<React.SetStateAction<PaginationState>>;
   globalFilter: string;
   setGlobalFilter: (filter: string) => void;
+  sorting: SortingState;
+  setSorting: React.Dispatch<React.SetStateAction<SortingState>>;
 }
 
 const AddressTable: React.FC<AddressTableProps> = ({
@@ -145,11 +218,25 @@ const AddressTable: React.FC<AddressTableProps> = ({
   setPagination,
   globalFilter,
   setGlobalFilter,
+  sorting,
+  setSorting,
 }) => {
-  const [sorting, setSorting] = useState<SortingState>([]);
   const [editingRow, setEditingRow] = useState<string | null>(null);
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [isExporting, setIsExporting] = useState(false);
 
-  console.log(data);
+  // Memuat library XLSX dari CDN saat komponen dimuat
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src =
+      "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+    script.async = true;
+    document.body.appendChild(script);
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
   const handleEdit = (row: Address) => {
     setEditingRow(row.id);
   };
@@ -168,6 +255,30 @@ const AddressTable: React.FC<AddressTableProps> = ({
 
   const columns: ColumnDef<Address>[] = useMemo(
     () => [
+      {
+        id: "select",
+        header: ({ table }) => (
+          <Checkbox
+            checked={
+              table.getIsAllPageRowsSelected() ||
+              (table.getIsSomePageRowsSelected() && "indeterminate")
+            }
+            onCheckedChange={(value) =>
+              table.toggleAllPageRowsSelected(!!value)
+            }
+            aria-label="Pilih semua"
+          />
+        ),
+        cell: ({ row }) => (
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(value) => row.toggleSelected(!!value)}
+            aria-label="Pilih baris"
+          />
+        ),
+        enableSorting: false,
+        enableHiding: false,
+      },
       {
         accessorKey: "phoneNumber",
         header: ({ column }) => (
@@ -313,6 +424,158 @@ const AddressTable: React.FC<AddressTableProps> = ({
           <div>{row.original.hasReceivedMessage ? "Ya" : "Tidak"}</div>
         ),
       },
+
+      {
+        accessorKey: "rating",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Rating
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => <div>{row.original.rating}</div>,
+      },
+      {
+        accessorKey: "reviews",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Reviews
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => <div>{row.original.reviews}</div>,
+      },
+      {
+        accessorKey: "website",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Website
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => <div>{row.original.website}</div>,
+      },
+      {
+        accessorKey: "email",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Email
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => <div>{row.original.email}</div>,
+      },
+      {
+        accessorKey: "latitude",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Latitude
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => <div>{row.original.latitude}</div>,
+      },
+      {
+        accessorKey: "longitude",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Longitude
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => <div>{row.original.longitude}</div>,
+      },
+      {
+        accessorKey: "postalCode",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Code Pos
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => <div>{row.original.postalCode}</div>,
+      },
+      {
+        accessorKey: "odp",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            ODP
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => <div>{row.original.odp}</div>,
+      },
+      {
+        accessorKey: "distance",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Distance
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => <div>{row.original.distance}</div>,
+      },
+      {
+        accessorKey: "createdAt",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Created At
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="font-medium">
+            {formatDate(row.original.createdAt as string)}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "updatedAt",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Updated At
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="font-medium">
+            {formatDate(row.original.updatedAt as string)}
+          </div>
+        ),
+      },
       {
         id: "actions",
         header: "Aksi",
@@ -323,12 +586,12 @@ const AddressTable: React.FC<AddressTableProps> = ({
               size="sm"
               onClick={() => handleEdit(row.original)}
             >
-              <Edit className="h-4 w-4 mr-2" /> Edit
+              <Edit className="h-4 w-4" />
             </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="destructive" size="sm">
-                  <Trash2 className="h-4 w-4 mr-2" /> Hapus
+                  <Trash2 className="h-4 w-4" />
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
@@ -363,17 +626,101 @@ const AddressTable: React.FC<AddressTableProps> = ({
       sorting,
       pagination,
       globalFilter,
+      rowSelection,
     },
     onPaginationChange: setPagination,
     onGlobalFilterChange: setGlobalFilter,
     onSortingChange: setSorting,
+    onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    manualSorting: true,
     manualPagination: true,
     manualFiltering: true,
   });
+
+  const selectedRows = table.getFilteredSelectedRowModel().rows;
+  const isAnySelected = selectedRows.length > 0;
+
+  const handleMassDelete = async () => {
+    const idsToDelete = selectedRows.map((row) => row.original.id);
+    await AddressService.deleteMany(idsToDelete);
+    setRowSelection({});
+    onRefresh();
+  };
+
+  const handleMassUpdateStatus = async (status: boolean) => {
+    const idsToUpdate = selectedRows.map((row) => row.original.id);
+    await AddressService.updateReceivedMessageStatus(idsToUpdate, status);
+    setRowSelection({});
+    onRefresh();
+  };
+
+  const handleExportExcel = async (exportType: "all" | "filtered") => {
+    if (typeof XLSX === "undefined") {
+      alert("Pustaka ekspor (XLSX) tidak ditemukan. Coba muat ulang halaman.");
+      return;
+    }
+
+    setIsExporting(true);
+    let dataToExport = [];
+
+    try {
+      if (exportType === "all") {
+        const allData = await AddressService.getAll(
+          1,
+          totalData,
+          0,
+          globalFilter,
+          sorting[0]?.id as string,
+          sorting[0]?.desc ? "desc" : "asc"
+        );
+        dataToExport = allData.data;
+      } else {
+        // Cukup gunakan data yang sudah dimuat di tabel
+        dataToExport = data;
+      }
+
+      if (dataToExport.length === 0) {
+        alert("Tidak ada data untuk diekspor.");
+        setIsExporting(false);
+        return;
+      }
+
+      const today = new Date();
+      const formattedDate = `${String(today.getDate()).padStart(
+        2,
+        "0"
+      )}-${String(today.getMonth() + 1).padStart(
+        2,
+        "0"
+      )}-${today.getFullYear()}`;
+
+      // Perbaikan: Ubah format tanggal di data yang akan diekspor
+      const formattedDataToExport = dataToExport.map(
+        (entry: { createdAt: string | Date; updatedAt: string | Date }) => ({
+          ...entry,
+          createdAt: entry.createdAt ? formatDate(entry.createdAt) : null,
+          updatedAt: entry.updatedAt ? formatDate(entry.updatedAt) : null,
+        })
+      );
+
+      const worksheet = XLSX.utils.json_to_sheet(formattedDataToExport);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Data Alamat");
+
+      const fileName = `data-alamat-${formattedDate}.xlsx`;
+      XLSX.writeFile(workbook, fileName);
+      alert("Data berhasil diekspor ke Excel!");
+    } catch (error) {
+      console.error("Export error:", error);
+      alert("Terjadi kesalahan saat mengekspor data.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
     <div className="space-y-4 w-full p-4">
@@ -384,19 +731,94 @@ const AddressTable: React.FC<AddressTableProps> = ({
           onChange={(event) => setGlobalFilter(event.target.value)}
           className="max-w-sm"
         />
-        <Button
-          onClick={onRefresh}
-          variant="outline"
-          size="sm"
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <RefreshCcw className="mr-2 h-4 w-4" />
+        <div className="flex gap-2">
+          {isAnySelected && (
+            <>
+              <Button
+                onClick={() => handleMassUpdateStatus(true)}
+                variant="outline"
+                size="sm"
+              >
+                Tandai Diterima
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm">
+                    Hapus Terpilih ({selectedRows.length})
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Apakah Anda yakin?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Tindakan ini akan menghapus {selectedRows.length} data
+                      yang terpilih secara permanen.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Batal</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleMassDelete}>
+                      Hapus
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </>
           )}
-          Muat Ulang
-        </Button>
+          <Button
+            onClick={onRefresh}
+            variant="outline"
+            size="sm"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCcw className="mr-2 h-4 w-4" />
+            )}
+            Muat Ulang
+          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" size="sm" disabled={isExporting}>
+                {isExporting ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <FileDown className="mr-2 h-4 w-4" />
+                )}
+                Ekspor
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Opsi Ekspor Data</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Pilih opsi ekspor yang Anda inginkan.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <div className="flex flex-col gap-2">
+                <Button
+                  variant="secondary"
+                  onClick={() => handleExportExcel("filtered")}
+                  disabled={isExporting}
+                >
+                  Ekspor Data Terfilter (
+                  {table.getFilteredRowModel().rows.length} baris)
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => handleExportExcel("all")}
+                  disabled={isExporting}
+                >
+                  Ekspor Semua Data ({totalData} baris)
+                </Button>
+              </div>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Batal</AlertDialogCancel>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </div>
       <div className="relative rounded-md border w-full max-h-[60vh] overflow-auto">
         <Table>
@@ -429,7 +851,10 @@ const AddressTable: React.FC<AddressTableProps> = ({
               </TableRow>
             ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(
