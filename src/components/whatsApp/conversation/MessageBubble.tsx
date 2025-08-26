@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   Reply,
   Check,
@@ -11,6 +11,12 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConversationMessage } from "@/types";
+import { convertToHtml } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface MessageBubbleProps {
   message: ConversationMessage;
@@ -22,13 +28,13 @@ interface MessageBubbleProps {
  * Komponen untuk merender sebuah gelembung pesan.
  */
 const MessageBubble = ({ message, isFromMe, onReply }: MessageBubbleProps) => {
-  const alignClass = isFromMe ? "self-end" : "self-start";
+  const alignClass = isFromMe ? "items-end" : "items-start";
   const bubbleClass = isFromMe
-    ? "bg-green-900 text-white"
-    : "bg-muted text-foreground";
-  const tailClass = isFromMe
-    ? "bg-green-900 top-0 right-0 transform translate-x-1/2 -translate-y-1/2 rotate-45 rounded-tr-sm"
-    : "bg-muted top-0 left-0 transform -translate-x-1/2 -translate-y-1/2 rotate-45 rounded-tl-sm";
+    ? "bg-green-900 text-white rounded-tr-none"
+    : "bg-muted text-foreground rounded-tl-none";
+  // const tailClass = isFromMe
+  //   ? "bg-green-900 top-0 right-0 transform translate-x-1/2 -translate-y-1/2 rotate-45 rounded-tr-sm"
+  //   : "bg-muted top-0 left-0 transform -translate-x-1/2 -translate-y-1/2 rotate-45 rounded-tl-sm";
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const getStatusIcon = (ack: number) => {
@@ -47,31 +53,35 @@ const MessageBubble = ({ message, isFromMe, onReply }: MessageBubbleProps) => {
   const getIconForType = (type: string) => {
     switch (type) {
       case "image":
-        return <ImageIcon className="h-4 w-4 mr-1" />;
+        return <ImageIcon className="h-8 w-8" />;
       case "video":
-        return <Video className="h-4 w-4 mr-1" />;
+        return <Video className="h-8 w-8" />;
       case "ptt":
-        return <Mic className="h-4 w-4 mr-1" />;
+        return <Mic className="h-8 w-8" />;
       case "location":
-        return <MapPin className="h-4 w-4 mr-1" />;
+        return <MapPin className="h-8 w-8" />;
       default:
-        return <File className="h-4 w-4 mr-1" />;
+        return <File className="h-8 w-8" />;
     }
   };
 
+  const formattedBody = useMemo(
+    () => convertToHtml(message.body),
+    [message.body]
+  );
+
   return (
-    <div className={`flex flex-col max-w-[80%] ${alignClass}`}>
-      <div
-        className={`relative px-3 rounded-xl shadow-md ${bubbleClass}`}
-        style={{
-          borderTopRightRadius: isFromMe ? "4px" : "12px",
-          borderTopLeftRadius: isFromMe ? "12px" : "4px",
-        }}
-      >
-        <div className={`absolute w-3 h-3 ${tailClass}`} />
-        <div className="flex justify-between items-center">
+    <div className={`flex flex-col ${alignClass}`}>
+      <Tooltip>
+        <TooltipTrigger
+          className={`relative p-2 rounded-xl shadow-md max-w-lg max-sm:max-w-full ${bubbleClass}`}
+          style={{
+            borderTopRightRadius: isFromMe ? "4px" : "12px",
+            borderTopLeftRadius: isFromMe ? "12px" : "4px",
+          }}
+        >
           <div className="flex justify-between items-start md:max-w-lg">
-            <p className="text-sm break-words min-w-0">
+            <p className="text-sm text-left break-words min-w-0 pr-12">
               {message.isMedia ? (
                 getIconForType("image")
               ) : message.isAudio ? (
@@ -85,33 +95,35 @@ const MessageBubble = ({ message, isFromMe, onReply }: MessageBubbleProps) => {
               ) : message.type === "document" ? (
                 <File className="h-4 w-4 mr-1" />
               ) : (
-                message.body
+                <div dangerouslySetInnerHTML={{ __html: formattedBody }} />
               )}
             </p>
+            <div className="absolute right-2 bottom-2 flex flex-col items-end">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => onReply(message)}
+                className="p-1 h-auto text-muted-foreground/50 hover:text-foreground bg-transparent hover:bg-transparent transition-colors"
+              >
+                <Reply className="h-3 w-3" />
+              </Button>
+            </div>
           </div>
-          <div className="flex flex-col items-end">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onReply(message)}
-              className="p-1 h-auto text-muted-foreground/50 hover:text-foreground/80 transition-colors"
-            >
-              <Reply className="h-3 w-3" />
-            </Button>
-            <span className="text-xs text-right text-muted-foreground/50 mt-1">
-              {new Date(message.timestamp).toLocaleDateString("id-ID", {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-              })}{" "}
-              {new Date(message.timestamp).toLocaleTimeString("id-ID", {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </span>
-          </div>
-        </div>
-      </div>
+        </TooltipTrigger>
+        <TooltipContent className="bg-black/75" side="bottom" align="start">
+          <span className="text-xs text-right text-muted-foreground/50 mt-1">
+            {new Date(message.timestamp).toLocaleDateString("id-ID", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            })}{" "}
+            {new Date(message.timestamp).toLocaleTimeString("id-ID", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </span>
+        </TooltipContent>
+      </Tooltip>
     </div>
   );
 };

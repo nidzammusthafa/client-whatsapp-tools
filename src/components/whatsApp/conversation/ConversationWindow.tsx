@@ -3,14 +3,14 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent, CardTitle } from "@/components/ui/card";
 import {
   CheckCheck,
   Loader2,
-  Send,
   Tag,
   XCircle,
   ArrowLeft,
+  SendHorizonal,
 } from "lucide-react";
 import { useWhatsAppStore } from "@/stores/whatsapp";
 import { ConversationMessage } from "@/types";
@@ -30,6 +30,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
+import { Tooltip } from "@/components/ui/tooltip";
 
 interface ConversationWindowProps {
   chatId: string;
@@ -71,7 +72,7 @@ const LabelSelector = ({
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
-          <Tag className="h-4 w-4 mr-2" /> Atur Label
+          <Tag className="h-4 w-4" />
         </Button>
       </DialogTrigger>
       <DialogContent>
@@ -168,6 +169,9 @@ const ConversationWindow = ({ chatId, clientId }: ConversationWindowProps) => {
     useState<ConversationMessage | null>(null);
   const [isEmojiOpen, setIsEmojiOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const lastScrollY = useRef(0);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const messages = messagesByChatId[chatId] || [];
 
@@ -185,7 +189,7 @@ const ConversationWindow = ({ chatId, clientId }: ConversationWindowProps) => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Handle pembaruan real-time dari Socket.IO
+  // Handle pembaruan real-time dari Socket.IO dan scroll
   useEffect(() => {
     const socket = getWhatsappSocket();
     const onNewMessage = (payload: { message: ConversationMessage }) => {
@@ -196,8 +200,25 @@ const ConversationWindow = ({ chatId, clientId }: ConversationWindowProps) => {
 
     socket.on("whatsapp-new-message", onNewMessage);
 
+    const handleScroll = () => {
+      const container = scrollContainerRef.current;
+      if (container) {
+        const currentScrollY = container.scrollTop;
+        if (currentScrollY > lastScrollY.current) {
+          setIsHeaderVisible(false);
+        } else {
+          setIsHeaderVisible(true);
+        }
+        lastScrollY.current = currentScrollY;
+      }
+    };
+
+    const container = scrollContainerRef.current;
+    container?.addEventListener("scroll", handleScroll);
+
     return () => {
       socket.off("whatsapp-new-message", onNewMessage);
+      container?.removeEventListener("scroll", handleScroll);
     };
   }, [chatId, addMessageToChat]);
 
@@ -262,8 +283,11 @@ const ConversationWindow = ({ chatId, clientId }: ConversationWindowProps) => {
 
   return (
     <div className="h-full flex flex-col">
-      <CardHeader className="p-4 border-b flex justify-between items-center">
-        {/* Header mobile */}
+      <header
+        className={`p-1 border-b flex justify-between items-center transition-transform duration-300 ${
+          isHeaderVisible ? "translate-y-0" : "-translate-y-full hidden"
+        }`}
+      >
         <div className="md:hidden flex items-center">
           <Button
             variant="ghost"
@@ -292,15 +316,18 @@ const ConversationWindow = ({ chatId, clientId }: ConversationWindowProps) => {
             />
             <Button
               onClick={() => markChatAsRead(chatId, lastMessage)}
-              variant="secondary"
+              variant="outline"
               size="sm"
             >
-              <CheckCheck className="h-4 w-4 mr-2" /> Tandai Sudah Dibaca
+              <CheckCheck className="h-4 w-4" />
             </Button>
           </div>
         </div>
-      </CardHeader>
-      <CardContent className="flex-1 p-4 overflow-y-auto scrollbar-none space-y-3">
+      </header>
+      <CardContent
+        ref={scrollContainerRef}
+        className="flex-1 p-4 overflow-y-auto scrollbar-none space-y-3"
+      >
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full text-muted-foreground">
             {isSocketConnected ? (
@@ -311,17 +338,19 @@ const ConversationWindow = ({ chatId, clientId }: ConversationWindowProps) => {
           </div>
         ) : (
           messages.map((msg, index) => (
-            <MessageBubble
-              key={index}
-              message={msg}
-              isFromMe={msg.isFromMe}
-              onReply={handleSetReply}
-            />
+            <Tooltip key={index}>
+              <MessageBubble
+                message={msg}
+                isFromMe={msg.isFromMe}
+                onReply={handleSetReply}
+              />
+            </Tooltip>
           ))
         )}
+
         <div ref={messagesEndRef} />
       </CardContent>
-      <div className="p-4">
+      <div className="px-4">
         {replyToMessage && (
           <div className="mb-2 p-2 rounded-lg bg-muted border relative">
             <p className="text-sm font-semibold">
@@ -341,7 +370,7 @@ const ConversationWindow = ({ chatId, clientId }: ConversationWindowProps) => {
             </Button>
           </div>
         )}
-        <form onSubmit={handleSendMessage} className="flex gap-2 items-center">
+        <form onSubmit={handleSendMessage} className="flex items-center">
           <Button
             type="button"
             variant="ghost"
@@ -352,7 +381,7 @@ const ConversationWindow = ({ chatId, clientId }: ConversationWindowProps) => {
               😊
             </span>
           </Button>
-          <div className="relative w-full">
+          <div className="w-full flex items-center rounded-lg mt-1">
             {isEmojiOpen && (
               <div className="absolute bottom-14 left-0 z-10">
                 <EmojiPicker onEmojiClick={handleEmojiClick} />
@@ -363,18 +392,17 @@ const ConversationWindow = ({ chatId, clientId }: ConversationWindowProps) => {
               onChange={(e) => setMessageInput(e.target.value)}
               placeholder="Ketik pesan..."
               rows={1}
-              className="flex-1 resize-none"
+              className="resize-none block w-full text-sm text-gray-900 bg-white rounded-lg dark:placeholder-gray-400 dark:text-white"
               disabled={!isSocketConnected}
             />
           </div>
           <Button
-            type="submit"
             disabled={!messageInput.trim() || !isSocketConnected}
             className="cursor-pointer"
-            variant="outline"
+            variant="ghost"
             size="sm"
           >
-            <Send className="h-4 w-4" />
+            <SendHorizonal className="h-8 w-8" />
           </Button>
         </form>
       </div>

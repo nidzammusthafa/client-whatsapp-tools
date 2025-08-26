@@ -9,7 +9,6 @@ import ClientListSection from "./client/ClientListSection";
 import NumberCheckSection from "./numberChecker/NumberCheckSection";
 import WarmerSection from "./whatsAppWarmer/WarmerSection";
 import StoredMessageManagement from "./message/StoredMessageManagement";
-import { useWhatsAppManager } from "@/hooks/useWhatsappManager";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import QrCodeDialog from "./client/QRCodeDialog";
 import { useWhatsAppStore } from "@/stores/whatsapp";
@@ -28,8 +27,6 @@ const NEXT_PUBLIC_WHATSAPP_SERVER_URL =
   process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000/api/whatsapp";
 
 export const WhatsAppDashboard = () => {
-  useWhatsAppManager();
-
   // Ambil state dari store Zustand
   const globalError = useWhatsAppStore((state) => state.globalError);
   const isSocketConnected = useWhatsAppStore(

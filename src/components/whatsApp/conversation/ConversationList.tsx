@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RefreshCcw } from "lucide-react";
@@ -8,6 +8,7 @@ import { useWhatsAppStore } from "@/stores/whatsapp";
 import { Badge } from "@/components/ui/badge";
 import { getWhatsappSocket } from "@/lib/whatsappSocket";
 import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 /**
  * Sidebar yang menampilkan daftar chat.
@@ -21,6 +22,10 @@ const ConversationList = () => {
     messagesByChatId,
     loadAllConversationMessages,
   } = useWhatsAppStore();
+
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const lastScrollY = useRef(0);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
   // Muat semua pesan saat pertama kali render
   useEffect(() => {
@@ -43,8 +48,25 @@ const ConversationList = () => {
 
     socket.on("whatsapp-new-message", onNewMessage);
 
+    const handleScroll = () => {
+      const container = scrollContainerRef.current;
+      if (container) {
+        const currentScrollY = container.scrollTop;
+        if (currentScrollY > lastScrollY.current) {
+          setIsHeaderVisible(false);
+        } else {
+          setIsHeaderVisible(true);
+        }
+        lastScrollY.current = currentScrollY;
+      }
+    };
+
+    const container = scrollContainerRef.current;
+    container?.addEventListener("scroll", handleScroll);
+
     return () => {
       socket.off("whatsapp-new-message", onNewMessage);
+      container?.removeEventListener("scroll", handleScroll);
     };
   }, [loadAllConversationMessages]);
 
@@ -54,10 +76,10 @@ const ConversationList = () => {
 
       // Group messages by clientId to separate conversations
       const messagesByClient = messages.reduce((acc, message) => {
-        if (!acc[message.clientId]) {
-          acc[message.clientId] = [];
+        if (!acc[message.clientName]) {
+          acc[message.clientName] = [];
         }
-        acc[message.clientId].push(message);
+        acc[message.clientName].push(message);
         return acc;
       }, {} as Record<string, typeof messages>);
 
@@ -71,7 +93,7 @@ const ConversationList = () => {
 
         return {
           chatId,
-          clientId: clientMessages[0].clientId,
+          clientId: clientMessages[0].clientName,
           latestMessage,
         };
       });
@@ -111,9 +133,16 @@ const ConversationList = () => {
   };
 
   return (
-    <Card className="min-sm:w-1/3 min-w-[300px] max-w-sm min-sm:rounded-r-none min-sm:border-r-0">
-      <CardContent className={cn("p-0 h-full overflow-y-auto scrollbar-none")}>
-        <div className="p-4 border-b flex justify-between items-center">
+    <Card className="min-sm:w-1/3 min-w-[300px] max-sm:min-w-screen rounded-none max-w-sm min-sm:border-r-1 min-sm:border-r-neutral-800/30 border-t-0 py-0">
+      <CardContent
+        ref={scrollContainerRef}
+        className={cn("p-0 h-full overflow-y-auto scrollbar-none")}
+      >
+        <div
+          className={`sticky top-0 bg-accent/70 p-2 border-b flex justify-between items-center transition-transform duration-300 ${
+            isHeaderVisible ? "translate-y-0" : "-translate-y-full"
+          }`}
+        >
           <h3 className="text-lg font-semibold">
             Semua Chat ({allChats.length})
           </h3>
@@ -133,7 +162,7 @@ const ConversationList = () => {
         ) : (
           allChats.map((chat) => {
             const label = getChatLabel(chat.chatId);
-            const clientId = chat.latestMessage.clientId;
+            const clientId = chat.latestMessage.clientName;
 
             return (
               <div
@@ -143,6 +172,17 @@ const ConversationList = () => {
                   selectedChatId === chat.chatId ? "bg-muted" : ""
                 }`}
               >
+                <Avatar className="h-10 w-10">
+                  <AvatarImage
+                    src={`https://ui.shadcn.com/avatars/0${
+                      (chat.chatId.charCodeAt(0) % 5) + 1
+                    }.png`}
+                    alt={chat.latestMessage.sender}
+                  />
+                  <AvatarFallback>
+                    {chat.latestMessage.sender.substring(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium truncate flex justify-between">
                     <Badge

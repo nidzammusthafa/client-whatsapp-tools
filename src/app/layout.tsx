@@ -42,7 +42,7 @@ export default function RootLayout({
           >
             <DialogProvider>
               <Header />
-              <main className="container max-w-screen px-2 sm:px4">
+              <main className="container max-w-screen sm:px4">
                 {children}
                 <NotificationPermission />
               </main>

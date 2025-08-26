@@ -54,7 +54,7 @@ export const createConversationSlice: StateCreator<
 
       if (clientId) {
         const filteredMessages = messages.filter(
-          (message) => message.clientId === clientId
+          (message) => message.clientName === clientId
         );
         set((state) => ({
           messagesByChatId: {

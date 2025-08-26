@@ -65,3 +65,22 @@ export const formatDate = (dateString: string | Date): string | null => {
   // Menggabungkan semua bagian ke dalam format yang diinginkan
   return `${day}-${month}-${year}, ${hours}.${minutes}`;
 };
+
+/**
+ * Mengubah string menjadi format string wa.
+ * @param string String yang akan diubah menjadi bold, italic, dll.
+ * @returns html.
+ */
+export const convertToHtml = (text: string) => {
+  // Ganti newline (\n) dengan tag <br>
+  let htmlText = text.replace(/\n/g, "<br/>");
+  // Tebal: **teks**
+  htmlText = htmlText.replace(/\*(.*?)\*/g, "<strong>$1</strong>");
+  // Miring: _teks_
+  htmlText = htmlText.replace(/_(.*?)_/g, "<em>$1</em>");
+  // Coret: ~teks~
+  htmlText = htmlText.replace(/~(.*?)~/g, "<s>$1</s>");
+  // Monospace/Code Block: ```teks```
+  htmlText = htmlText.replace(/```(.*?)```/g, "<code>$1</code>");
+  return htmlText;
+};

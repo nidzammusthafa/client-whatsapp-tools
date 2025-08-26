@@ -16,11 +16,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  Table,
   TableBody,
   TableCell,
   TableHead,
-  TableHeader,
   TableRow,
 } from "@/components/ui/table";
 import {
@@ -53,26 +51,35 @@ import { formatDate } from "@/lib/utils";
 // Deklarasi global untuk library XLSX
 declare const XLSX: typeof import("xlsx");
 
+const NEXT_PUBLIC_WHATSAPP_SERVER_URL =
+  process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000/api/whatsapp";
+
 // Asumsikan AddressService diimpor dari file terpisah yang berisi fungsi API
 // Ini adalah mock API client, Anda perlu mengimplementasikannya sesuai server Express Anda
 const AddressService = {
   deleteMany: async (ids: string[]) => {
-    const response = await fetch("/api/address/delete-many", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ids }),
-    });
+    const response = await fetch(
+      `${NEXT_PUBLIC_WHATSAPP_SERVER_URL}/address?/delete-many`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids }),
+      }
+    );
     if (!response.ok) {
       throw new Error("Gagal menghapus data.");
     }
     return response.json();
   },
   updateReceivedMessageStatus: async (ids: string[], status: boolean) => {
-    const response = await fetch("/api/address/update-status", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ids, status }),
-    });
+    const response = await fetch(
+      `${NEXT_PUBLIC_WHATSAPP_SERVER_URL}/address?/update-status`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids, status }),
+      }
+    );
     if (!response.ok) {
       throw new Error("Gagal memperbarui status.");
     }
@@ -87,7 +94,7 @@ const AddressService = {
     sortOrder: "asc" | "desc"
   ) => {
     const response = await fetch(
-      `/api/address/get-all?page=${page}&limit=${limit}&skip=${skip}&search=${search}&sortBy=${sortBy}&sortOrder=${sortOrder}`
+      `${NEXT_PUBLIC_WHATSAPP_SERVER_URL}/address?/get-all?page=${page}&limit=${limit}&skip=${skip}&search=${search}&sortBy=${sortBy}&sortOrder=${sortOrder}`
     );
     if (!response.ok) {
       throw new Error("Gagal mengambil data.");
@@ -95,20 +102,26 @@ const AddressService = {
     return response.json();
   },
   delete: async (id: string) => {
-    const response = await fetch(`/api/address/delete/${id}`, {
-      method: "DELETE",
-    });
+    const response = await fetch(
+      `${NEXT_PUBLIC_WHATSAPP_SERVER_URL}/address?/delete/${id}`,
+      {
+        method: "DELETE",
+      }
+    );
     if (!response.ok) {
       throw new Error("Gagal menghapus data.");
     }
     return response.json();
   },
   update: async (id: string, data: Partial<Address>) => {
-    const response = await fetch(`/api/address/update/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
+    const response = await fetch(
+      `${NEXT_PUBLIC_WHATSAPP_SERVER_URL}/address?/update/${id}`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }
+    );
     if (!response.ok) {
       throw new Error("Gagal memperbarui data.");
     }
@@ -821,8 +834,8 @@ const AddressTable: React.FC<AddressTableProps> = ({
         </div>
       </div>
       <div className="relative rounded-md border w-full max-h-[60vh] overflow-auto">
-        <Table>
-          <TableHeader className="sticky top-0 z-10 bg-slate-50 dark:bg-neutral-900/90">
+        <table>
+          <thead className="sticky top-0 z-10 bg-slate-50 dark:bg-neutral-900/90">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
@@ -837,7 +850,7 @@ const AddressTable: React.FC<AddressTableProps> = ({
                 ))}
               </TableRow>
             ))}
-          </TableHeader>
+          </thead>
           <TableBody>
             {isLoading ? (
               <TableRow>
@@ -876,9 +889,9 @@ const AddressTable: React.FC<AddressTableProps> = ({
               </TableRow>
             )}
           </TableBody>
-        </Table>
+        </table>
       </div>
-      <div className="sticky bottom-0 z-10 bg-slate-50 p-2 dark:bg-neutral-900/90">
+      <div className="sticky bottom-0 z-10 bg-slate-50 p-2 dark:bg-neutral-900/90 rounded-sm">
         <DataTablePagination table={table} totalData={totalData} />
       </div>
     </div>

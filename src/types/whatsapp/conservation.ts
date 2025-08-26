@@ -4,7 +4,7 @@
 export interface ConversationMessage {
   id: string;
   messageId: string;
-  clientId: string;
+  clientName: string;
   chatId: string;
   sender: string;
   body: string;

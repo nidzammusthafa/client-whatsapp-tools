@@ -326,8 +326,7 @@ const ClientStatusItem: React.FC<ClientStatusItemProps> = ({
         {/* Tombol Aksi */}
         <div className="flex flex-wrap gap-2 justify-center sm:justify-end flex-1 min-w-0">
           {" "}
-          {/* Use flex-wrap, justify-end on sm, flex-1 min-w-0 */}
-          {isClientActive ? (
+          {isClientActive || client.status === "loading" ? (
             <>
               <Tooltip>
                 <TooltipTrigger asChild>
