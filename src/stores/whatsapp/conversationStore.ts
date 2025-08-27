@@ -8,10 +8,11 @@ import {
   LabeledChat,
   ConversationMessage,
 } from "@/types";
+import { useUrlStore } from "./socketStore";
 
-const NEXT_PUBLIC_WHATSAPP_SERVER_URL =
-  process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000/api/whatsapp";
-
+const NEXT_PUBLIC_WHATSAPP_SERVER_URL = `${
+  useUrlStore.getState().url
+}/api/whatsapp`;
 export const createConversationSlice: StateCreator<
   WhatsAppState & WhatsAppActions,
   [],

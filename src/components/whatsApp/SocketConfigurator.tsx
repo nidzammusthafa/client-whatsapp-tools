@@ -12,25 +12,25 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { useSocketStore } from "@/stores/whatsapp/socketStore";
 import {
   connectWhatsappSocket,
   disconnectWhatsappSocket,
   reconnectWhatsappSocket,
 } from "@/lib/whatsappSocket";
+import { useUrlStore } from "@/stores/whatsapp/socketStore";
 
 export function SocketConfigurator() {
-  const [socketUrlInput, setSocketUrlInput] = useState("http://localhost:5000");
+  const [urlInput, setUrlInput] = useState("http://localhost:5000");
 
-  const { socketUrl, setSocketUrl } = useSocketStore();
+  const { url, setUrl } = useUrlStore();
 
   const handleSocketUrlSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (socketUrlInput.trim()) {
+    if (urlInput.trim()) {
       try {
-        new URL(socketUrlInput);
-        setSocketUrl(socketUrlInput);
-        setSocketUrlInput("");
+        new URL(urlInput);
+        setUrl(urlInput);
+        setUrlInput("");
       } catch {
         alert("Format URL Socket tidak valid.");
       }
@@ -60,8 +60,8 @@ export function SocketConfigurator() {
                 id="socket-url-input"
                 type="url"
                 placeholder="http://localhost:5000"
-                value={socketUrlInput}
-                onChange={(e) => setSocketUrlInput(e.target.value)}
+                value={urlInput}
+                onChange={(e) => setUrlInput(e.target.value)}
                 required
               />
             </div>
@@ -69,9 +69,9 @@ export function SocketConfigurator() {
           </form>
           <div className="p-4 bg-muted rounded-md mt-4">
             <p className="text-sm font-medium">URL Socket Tersimpan:</p>
-            {socketUrl ? (
+            {url ? (
               <span className="text-lg font-mono text-purple-600 break-all">
-                {socketUrl}
+                {url}
               </span>
             ) : (
               <span className="text-lg text-gray-500 italic">
@@ -81,19 +81,19 @@ export function SocketConfigurator() {
           </div>
         </CardContent>
         <CardFooter className="flex justify-end gap-2">
-          <Button onClick={connectWhatsappSocket} disabled={!socketUrl}>
+          <Button onClick={connectWhatsappSocket} disabled={!url}>
             Connect
           </Button>
           <Button
             onClick={reconnectWhatsappSocket}
-            disabled={!socketUrl}
+            disabled={!url}
             variant="outline"
           >
             Reconnect
           </Button>
           <Button
             onClick={disconnectWhatsappSocket}
-            disabled={!socketUrl}
+            disabled={!url}
             variant="destructive"
           >
             Disconnect

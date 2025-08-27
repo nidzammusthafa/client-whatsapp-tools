@@ -14,6 +14,7 @@ import { UploadCloud, CheckCircle2, Save } from "lucide-react";
 import { UploadZone } from "@/components/UploadZone";
 import { Address } from "@/types/whatsapp/address";
 import { Switch } from "@/components/ui/switchs";
+import { useUrlStore } from "@/stores/whatsapp/socketStore";
 
 // Deklarasi global untuk library XLSX
 declare const XLSX: typeof import("xlsx");
@@ -23,9 +24,9 @@ interface ExcelRow {
   [key: string]: any;
 }
 
-const NEXT_PUBLIC_WHATSAPP_SERVER_URL =
-  process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000/api/whatsapp";
-
+const NEXT_PUBLIC_WHATSAPP_SERVER_URL = `${
+  useUrlStore.getState().url
+}/api/whatsapp`;
 interface ExcelDataManagementProps {
   onDataSubmitted: () => void;
 }

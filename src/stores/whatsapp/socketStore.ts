@@ -2,24 +2,24 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
 interface SocketState {
-  socketUrl: string | null;
-  setSocketUrl: (url: string) => void;
+  url: string | null;
+  setUrl: (url: string) => void;
 }
 
-export const useSocketStore = create<SocketState>()(
+export const useUrlStore = create<SocketState>()(
   persist(
     (set) => ({
-      socketUrl: null,
+      url: null,
       /**
        * Mengatur URL untuk koneksi Socket.IO.
        * @param {string} url - URL socket yang akan disimpan.
        */
-      setSocketUrl: (url: string) => {
-        set({ socketUrl: url });
+      setUrl: (url: string) => {
+        set({ url: url });
       },
     }),
     {
-      name: "socket-url-storage", // Nama key di localStorage
+      name: "url-storage", // Nama key di localStorage
       storage: createJSONStorage(() => localStorage),
     }
   )

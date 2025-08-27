@@ -1,8 +1,8 @@
-import { useSocketStore } from "@/stores/whatsapp/socketStore";
+import { useUrlStore } from "@/stores/whatsapp/socketStore";
 import { io, Socket } from "socket.io-client";
 import { toast } from "sonner";
 
-const SOCKET_URL = useSocketStore.getState().socketUrl;
+const SOCKET_URL = useUrlStore.getState().url;
 
 // Instance socket untuk namespace WhatsApp
 let whatsappSocket: Socket | null = null;

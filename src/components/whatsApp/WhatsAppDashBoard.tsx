@@ -24,9 +24,10 @@ import AddressTable from "./address/AddressTable";
 
 import { SortingState } from "@tanstack/react-table";
 import { SocketConfigurator } from "./SocketConfigurator";
-const NEXT_PUBLIC_WHATSAPP_SERVER_URL =
-  process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000/api/whatsapp";
-
+import { useUrlStore } from "@/stores/whatsapp/socketStore";
+const NEXT_PUBLIC_WHATSAPP_SERVER_URL = `${
+  useUrlStore.getState().url
+}/api/whatsapp`;
 export const WhatsAppDashboard = () => {
   // Ambil state dari store Zustand
   const globalError = useWhatsAppStore((state) => state.globalError);

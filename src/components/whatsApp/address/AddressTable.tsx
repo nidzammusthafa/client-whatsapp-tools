@@ -47,13 +47,14 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Address } from "@/types/whatsapp/address";
 import { formatDate } from "@/lib/utils";
+import { useUrlStore } from "@/stores/whatsapp/socketStore";
 
 // Deklarasi global untuk library XLSX
 declare const XLSX: typeof import("xlsx");
 
-const NEXT_PUBLIC_WHATSAPP_SERVER_URL =
-  process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000/api/whatsapp";
-
+const NEXT_PUBLIC_WHATSAPP_SERVER_URL = `${
+  useUrlStore.getState().url
+}/api/whatsapp`;
 // Asumsikan AddressService diimpor dari file terpisah yang berisi fungsi API
 // Ini adalah mock API client, Anda perlu mengimplementasikannya sesuai server Express Anda
 const AddressService = {
