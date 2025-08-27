@@ -147,7 +147,7 @@ const ConversationList = () => {
             Semua Chat ({allChats.length})
           </h3>
           <Button
-            variant="ghost"
+            variant="outline"
             size="icon"
             onClick={loadAllConversationMessages}
           >

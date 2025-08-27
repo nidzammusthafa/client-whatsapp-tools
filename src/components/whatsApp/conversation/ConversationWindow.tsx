@@ -35,7 +35,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface ConversationWindowProps {
   chatId: string;
-  clientId: string | undefined;
 }
 
 const LabelSelector = ({
@@ -128,7 +127,7 @@ const LabelSelector = ({
 /**
  * Jendela utama untuk menampilkan riwayat obrolan dan mengirim pesan.
  */
-const ConversationWindow = ({ chatId, clientId }: ConversationWindowProps) => {
+const ConversationWindow = ({ chatId }: ConversationWindowProps) => {
   const {
     messagesByChatId,
     loadMessagesForChat,
@@ -138,6 +137,8 @@ const ConversationWindow = ({ chatId, clientId }: ConversationWindowProps) => {
     addMessageToChat,
     isSocketConnected,
     setSelectedChatId, // Tambahkan setSelectedChatId
+    loginClient,
+    disconnectClient,
   } = useWhatsAppStore(
     useShallow((state) => ({
       messagesByChatId: state.messagesByChatId,
@@ -148,8 +149,11 @@ const ConversationWindow = ({ chatId, clientId }: ConversationWindowProps) => {
       addMessageToChat: state.addMessageToChat,
       isSocketConnected: state.isSocketConnected,
       setSelectedChatId: state.setSelectedChatId,
+      loginClient: state.loginClient,
+      disconnectClient: state.disconnectClient,
     }))
   );
+
   const { allLabels, setLabelForChat, loadAllLabels } = useWhatsAppStore(
     useShallow((state) => ({
       loadAllLabels: state.loadAllLabels,
@@ -173,17 +177,25 @@ const ConversationWindow = ({ chatId, clientId }: ConversationWindowProps) => {
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const lastScrollY = useRef(0);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const messages = messagesByChatId[chatId] || [];
+  const messages = useMemo(() => {
+    const msgs = messagesByChatId[chatId] || [];
+    // Sort by timestamp ascending (oldest first)
+    return [...msgs].sort(
+      (a, b) =>
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    );
+  }, [messagesByChatId, chatId]);
 
   const lastMessage = messages[messages.length - 1];
 
+  const clientName =
+    messagesByChatId[chatId][messagesByChatId[chatId].length - 1].clientName;
   // Muat pesan saat chat dipilih dan tandai sebagai terbaca
   useEffect(() => {
     if (chatId) {
-      loadMessagesForChat(chatId, clientId);
+      loadMessagesForChat(chatId, clientName);
     }
-  }, [chatId, loadMessagesForChat, clientId]);
+  }, [chatId, clientName, loadMessagesForChat]);
 
   // Gulir ke bawah saat pesan baru datang
   useEffect(() => {
@@ -329,12 +341,13 @@ const ConversationWindow = ({ chatId, clientId }: ConversationWindowProps) => {
             <CardTitle>{chatId.split("@")[0]}</CardTitle>
           </div>
           <div className="flex gap-2">
-            {/* Buka klien dalam mode non-headless */}
             <Button
               onClick={() => {
-                if (clientId) {
-                  const socket = getWhatsappSocket();
-                  socket.emit("open-client-in-browser", { clientId });
+                if (clientName) {
+                  disconnectClient(clientName);
+                  setTimeout(() => {
+                    loginClient(clientName, false);
+                  }, 2000);
                   toast.info("Membuka klien di browser...");
                 } else {
                   toast.error("Client ID tidak tersedia.");
@@ -343,7 +356,7 @@ const ConversationWindow = ({ chatId, clientId }: ConversationWindowProps) => {
               variant="outline"
               size="sm"
             >
-              Buka Klien
+              Headless
             </Button>
 
             <LabelSelector

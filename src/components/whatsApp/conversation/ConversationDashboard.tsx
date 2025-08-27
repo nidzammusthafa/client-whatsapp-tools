@@ -35,15 +35,12 @@ export const ConversationDashboard = () => {
 
   return (
     <div className="flex w-full h-screen overflow-hidden top-0">
-      {/* Tampilan default untuk desktop/layar lebar */}
       <div className="hidden md:flex flex-1 w-full h-full">
-        {/* Sidebar untuk Daftar Chat Berlabel */}
         <ConversationList />
 
-        {/* Tampilan Obrolan */}
         <div className="flex-1 bg-card flex flex-col">
           {selectedChatId ? (
-            <ConversationWindow chatId={selectedChatId} clientId="" />
+            <ConversationWindow chatId={selectedChatId} />
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center p-4">
               <MessageCircleMore className="h-24 w-24 text-muted-foreground opacity-50" />
@@ -58,7 +55,7 @@ export const ConversationDashboard = () => {
       {/* Tampilan obrolan mobile */}
       <div className="md:hidden flex flex-1 w-full h-full">
         {selectedChatId ? (
-          <ConversationWindow chatId={selectedChatId} clientId="" />
+          <ConversationWindow chatId={selectedChatId} />
         ) : (
           <ConversationList />
         )}

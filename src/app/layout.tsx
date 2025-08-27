@@ -38,6 +38,7 @@ export default function RootLayout({
               "/scrape",
               "/whatsapp",
               "/wa",
+              "/dashboard",
             ]}
           >
             <DialogProvider>

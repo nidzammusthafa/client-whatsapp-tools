@@ -3,6 +3,10 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { showNotification } from "@/lib/notificationUtils";
+import { getWhatsappSocket } from "@/lib/whatsappSocket";
+import { ConversationMessage } from "@/types";
+import { toast } from "sonner";
 import {
   Sidebar,
   SidebarContent,
@@ -13,6 +17,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarFooter,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import {
   Collapsible,
@@ -126,6 +131,44 @@ const items: MenuItem[] = [
 export function AppSidebar() {
   useWhatsAppManager();
   const pathname = usePathname();
+  const { setOpenMobile } = useSidebar();
+
+  React.useEffect(() => {
+    const socket = getWhatsappSocket();
+
+    const onNewMessage = (payload: { message: ConversationMessage }) => {
+      if (typeof window !== "undefined" && !payload.message.isFromMe) {
+        showNotification(
+          `Pesan baru dari ${payload.message.sender.split("@")[0]}`,
+          payload.message.body
+        );
+
+        toast.success(
+          <div>
+            <p className="text-sm font-semibold mb-2">Pesan Baru</p>
+            <div className="flex gap-2">
+              <p className="text-sm text-muted-foreground">
+                {payload.message.sender.split("@")[0]}:
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {payload.message.body}
+              </p>
+            </div>
+          </div>,
+          {
+            position: "top-right",
+            duration: 5000,
+          }
+        );
+      }
+    };
+
+    socket.on("whatsapp-new-message", onNewMessage);
+
+    return () => {
+      socket.off("whatsapp-new-message", onNewMessage);
+    };
+  }, []);
 
   return (
     <Sidebar>
@@ -141,7 +184,11 @@ export function AppSidebar() {
                 key={i}
               >
                 <SidebarGroup className="p-0">
-                  <SidebarGroupLabel asChild className="hover:bg-accent/40">
+                  <SidebarGroupLabel
+                    asChild
+                    className="hover:bg-accent/40"
+                    onClick={() => setOpenMobile(false)}
+                  >
                     <CollapsibleTrigger>
                       {item.title}
                       <ChevronDown className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180" />

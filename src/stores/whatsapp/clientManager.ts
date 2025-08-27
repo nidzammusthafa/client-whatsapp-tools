@@ -279,6 +279,7 @@ export const createClientManagerSlice: StateCreator<
       method: "qr",
       headless,
     };
+
     socket.emit("whatsapp-login-qr", payload);
     get().resetGlobalError();
     set((state) => {
