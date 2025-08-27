@@ -66,7 +66,7 @@ export async function POST(request: Request) {
 
       // Buat JWT token
       const token = jwt.sign({ userId: "admin" }, JWT_SECRET, {
-        expiresIn: "3h", // Token berlaku selama 3 jam
+        expiresIn: "1d",
       });
 
       // Kirim token dalam response

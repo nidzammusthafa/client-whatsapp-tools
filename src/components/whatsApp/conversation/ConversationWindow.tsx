@@ -31,6 +31,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 import { Tooltip } from "@/components/ui/tooltip";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface ConversationWindowProps {
   chatId: string;
@@ -284,7 +285,7 @@ const ConversationWindow = ({ chatId, clientId }: ConversationWindowProps) => {
   return (
     <div className="h-full flex flex-col">
       <header
-        className={`p-1 border-b flex justify-between items-center transition-transform duration-300 ${
+        className={`p-1 px-3 border-b flex justify-between items-center transition-transform duration-300 ${
           isHeaderVisible ? "translate-y-0" : "-translate-y-full hidden"
         }`}
       >
@@ -297,13 +298,54 @@ const ConversationWindow = ({ chatId, clientId }: ConversationWindowProps) => {
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
+          <Avatar className="h-10 w-10">
+            <AvatarImage
+              src={`https://ui.shadcn.com/avatars/0${
+                (chatId.charCodeAt(0) % 5) + 1
+              }.png`}
+              alt={chatId}
+            />
+            <AvatarFallback>
+              {chatId.substring(0, 2).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
           <CardTitle>{chatId.split("@")[0]}</CardTitle>
         </div>
 
         {/* Header desktop */}
         <div className="hidden md:flex flex-1 justify-between items-center">
-          <CardTitle>{chatId.split("@")[0]}</CardTitle>
+          <div className="flex items-center gap-2">
+            <Avatar className="h-7 w-7">
+              <AvatarImage
+                src={`https://ui.shadcn.com/avatars/0${
+                  (chatId.charCodeAt(0) % 5) + 1
+                }.png`}
+                alt={chatId}
+              />
+              <AvatarFallback>
+                {chatId.substring(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <CardTitle>{chatId.split("@")[0]}</CardTitle>
+          </div>
           <div className="flex gap-2">
+            {/* Buka klien dalam mode non-headless */}
+            <Button
+              onClick={() => {
+                if (clientId) {
+                  const socket = getWhatsappSocket();
+                  socket.emit("open-client-in-browser", { clientId });
+                  toast.info("Membuka klien di browser...");
+                } else {
+                  toast.error("Client ID tidak tersedia.");
+                }
+              }}
+              variant="outline"
+              size="sm"
+            >
+              Buka Klien
+            </Button>
+
             <LabelSelector
               chatId={chatId}
               currentLabelIds={
@@ -381,7 +423,7 @@ const ConversationWindow = ({ chatId, clientId }: ConversationWindowProps) => {
               😊
             </span>
           </Button>
-          <div className="w-full flex items-center rounded-lg mt-1">
+          <div className="w-full flex items-center rounded-lg my-1">
             {isEmojiOpen && (
               <div className="absolute bottom-14 left-0 z-10">
                 <EmojiPicker onEmojiClick={handleEmojiClick} />

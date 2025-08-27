@@ -3,7 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
-import Header from "@/components/layout/Header";
+// import Header from "@/components/layout/Header";
 import { AuthProvider } from "@/components/providers/auth-providers";
 import { NotificationPermission } from "@/components/notificationPermission";
 import { DialogProvider } from "@/components/providers/DialogProvider";
@@ -41,7 +41,7 @@ export default function RootLayout({
             ]}
           >
             <DialogProvider>
-              <Header />
+              {/* <Header /> */}
               <main className="container max-w-screen sm:px4">
                 {children}
                 <NotificationPermission />

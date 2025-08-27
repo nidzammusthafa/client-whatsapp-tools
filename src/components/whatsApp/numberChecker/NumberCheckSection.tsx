@@ -229,7 +229,7 @@ const NumberCheckSection: React.FC = () => {
   }, [isCheckingNumbers]);
 
   return (
-    <Card className="w-full max-w-[75vw] mx-auto rounded-lg shadow-xl border">
+    <Card className="w-full max-w-screen mx-auto rounded-lg shadow-xl border">
       <CardContent className="p-6 space-y-4">
         {!hasActiveMainClient && (
           <p className="text-sm text-destructive">

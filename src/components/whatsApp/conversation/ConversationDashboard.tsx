@@ -34,7 +34,7 @@ export const ConversationDashboard = () => {
   }, [loadLabeledChats, initialSettingsLoaded]);
 
   return (
-    <div className="flex w-full h-[calc(100vh-4rem)] overflow-hidden top-0">
+    <div className="flex w-full h-screen overflow-hidden top-0">
       {/* Tampilan default untuk desktop/layar lebar */}
       <div className="hidden md:flex flex-1 w-full h-full">
         {/* Sidebar untuk Daftar Chat Berlabel */}

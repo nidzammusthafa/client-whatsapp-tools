@@ -23,6 +23,7 @@ import AddressDialog from "./address/AddressDialog";
 import AddressTable from "./address/AddressTable";
 
 import { SortingState } from "@tanstack/react-table";
+import { SocketConfigurator } from "./SocketConfigurator";
 const NEXT_PUBLIC_WHATSAPP_SERVER_URL =
   process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000/api/whatsapp";
 
@@ -285,6 +286,12 @@ export const WhatsAppDashboard = () => {
           </TabsTrigger>
           <TabsTrigger
             className="border-muted-foreground/10"
+            value="socket-configurator"
+          >
+            Socket
+          </TabsTrigger>
+          <TabsTrigger
+            className="border-muted-foreground/10"
             value="address-management"
           >
             Kelola Data
@@ -315,6 +322,10 @@ export const WhatsAppDashboard = () => {
 
         <TabsContent value="stored-messages" className="mt-4">
           <StoredMessageManagement />
+        </TabsContent>
+
+        <TabsContent value="socket-configurator" className="mt-4">
+          <SocketConfigurator />
         </TabsContent>
 
         {/* Konten untuk Manajemen Alamat */}
