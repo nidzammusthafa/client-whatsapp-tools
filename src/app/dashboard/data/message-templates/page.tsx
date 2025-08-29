@@ -1,14 +1,21 @@
 "use client";
 
+import { useSidebar } from "@/components/ui/sidebar";
 import StoredMessageManagement from "@/components/whatsApp/message/StoredMessageManagement";
 import React from "react";
 
-const page = () => {
+const Page = () => {
+  const { open } = useSidebar();
+
   return (
-    <div className="container mx-auto p-4 md:p-4">
+    <div
+      className={`container px-2 sm:px-4 ${
+        open ? "max-w-[calc(100vw-16rem)]" : "max-w-screen"
+      } px-2 sm:px-4 py-8`}
+    >
       <StoredMessageManagement />
     </div>
   );
 };
 
-export default page;
+export default Page;

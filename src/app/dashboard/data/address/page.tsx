@@ -1,5 +1,6 @@
 "use client";
 
+import { useSidebar } from "@/components/ui/sidebar";
 import AddressDialog from "@/components/whatsApp/address/AddressDialog";
 import AddressTable from "@/components/whatsApp/address/AddressTable";
 import { Address } from "@/types/whatsapp/address";
@@ -101,8 +102,13 @@ const Page = () => {
     }
   };
 
+  const { open } = useSidebar();
   return (
-    <div className="container max-w-screen px-2 sm:px-4">
+    <div
+      className={`container px-2 sm:px-4 ${
+        open ? "max-w-[calc(100vw-16rem)]" : "max-w-screen"
+      } px-2 sm:px-4 py-8`}
+    >
       <AddressDialog onDataSubmitted={fetchAddresses} />
       <AddressTable
         data={addresses}

@@ -15,17 +15,17 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       <AppSidebar />
       <main className="flex flex-col w-full">
         <SidebarTrigger className="fixed z-40" />
-        <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            {globalError && (
+        {globalError && (
+          <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
               <Alert variant="destructive" className="mb-6 max-w-11/12 w-full">
                 <Terminal className="h-4 w-4" />
                 <AlertTitle>Kesalahan!</AlertTitle>
                 <AlertDescription>{globalError}</AlertDescription>
               </Alert>
-            )}
-          </div>
-        </header>
+            </div>
+          </header>
+        )}
         {children}
       </main>
     </SidebarProvider>
