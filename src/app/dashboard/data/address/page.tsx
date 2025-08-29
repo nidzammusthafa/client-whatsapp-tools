@@ -102,7 +102,7 @@ const Page = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="container max-w-screen px-2 sm:px-4">
       <AddressDialog onDataSubmitted={fetchAddresses} />
       <AddressTable
         data={addresses}

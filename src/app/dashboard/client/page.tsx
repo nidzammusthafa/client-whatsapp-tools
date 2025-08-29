@@ -5,7 +5,7 @@ import React from "react";
 
 const page = () => {
   return (
-    <div className="p-4 w-full max-w-screen">
+    <div className="container max-w-screen px-2 sm:px-4">
       <ClientListSection />
     </div>
   );
