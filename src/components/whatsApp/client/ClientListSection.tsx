@@ -265,8 +265,6 @@ const ClientListSection: React.FC = () => {
 
         {clients.length === 0 ? (
           <p className="text-muted-foreground text-base text-center">
-            {" "}
-            {/* Menggunakan text-muted-foreground */}
             Belum ada klien WhatsApp yang aktif. Silakan login di atas.
           </p>
         ) : (

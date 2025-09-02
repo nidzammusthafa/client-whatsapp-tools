@@ -381,7 +381,7 @@ const ConversationWindow = ({ chatId }: ConversationWindowProps) => {
       </header>
       <CardContent
         ref={scrollContainerRef}
-        className="flex-1 p-4 overflow-y-auto scrollbar-none space-y-3"
+        className="flex-1 p-4 overflow-y-auto space-y-3"
       >
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full text-muted-foreground">

@@ -81,6 +81,8 @@ export interface WABlastProgressUpdate {
   whatsappWarmerMinMessages?: number;
   whatsappWarmerMaxMessages?: number;
   whastappWarmerDelayMs?: number;
+  whatsappWarmerMinDelayMs?: number;
+  whatsappWarmerMaxDelayMs?: number;
   whatsappWarmerLanguage?: "en" | "id";
   excelData?: ExcelRow[];
   excelColumns?: string[];

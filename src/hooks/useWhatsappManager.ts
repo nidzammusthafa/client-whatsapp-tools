@@ -59,8 +59,6 @@ export const useWhatsAppManager = () => {
       setSocketConnected(true);
       setGlobalError(null); // Hapus error jika berhasil terhubung
 
-      // Setelah terhubung, minta semua status klien yang sudah ada
-      socket.emit("whatsapp-get-client-status-all");
       loadStoredMessages();
       socket.emit("whatsapp-get-initial-settings"); // Minta pengaturan awal, termasuk whitelist
       socket.emit("whatsapp-get-all-blast-jobs");

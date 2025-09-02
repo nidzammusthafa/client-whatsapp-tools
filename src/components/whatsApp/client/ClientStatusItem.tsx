@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -36,6 +36,13 @@ import {
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switchs";
 import { WhatsAppClientStatusUpdate } from "@/types";
+import { RatingSlider } from "./RatingSlider";
+import { useUrlStore } from "@/stores/whatsapp/socketStore";
+import { formatTimeAgo } from "@/lib/utils";
+
+const NEXT_PUBLIC_WHATSAPP_SERVER_URL = `${
+  useUrlStore.getState().url
+}/api/whatsapp`;
 
 interface ClientStatusItemProps {
   client: WhatsAppClientStatusUpdate;
@@ -60,8 +67,38 @@ const ClientStatusItem: React.FC<ClientStatusItemProps> = ({
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [newAccountId, setNewAccountId] = useState<string>(client.accountId);
   const [renameError, setRenameError] = useState<string | null>(null);
+  const [rating, setRating] = useState(client.rating || undefined);
 
   const invalidCharsRegex = /[^a-zA-Z0-9-_]/g;
+
+  useEffect(() => {
+    const updateRating = async () => {
+      try {
+        const res = await fetch(
+          `${NEXT_PUBLIC_WHATSAPP_SERVER_URL}/client/rating/${client.accountId}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              rating: Number(rating),
+            }),
+          }
+        );
+        const data = await res.json();
+        toast.success(data.message);
+      } catch (error) {
+        console.error("Error updating rating:", error);
+      }
+    };
+    const handler = setTimeout(() => {
+      if (rating !== client.rating) {
+        updateRating();
+      }
+    }, 1000);
+    return () => clearTimeout(handler);
+  }, [client.accountId, client.rating, rating]);
 
   const getStatusColorClass = (
     status: WhatsAppClientStatusUpdate["status"]
@@ -279,6 +316,12 @@ const ClientStatusItem: React.FC<ClientStatusItemProps> = ({
             </TooltipTrigger>
             <TooltipContent>
               <p>{client.message}</p>
+              {client.outgoingMsgs24h && client.firstOutgoingMsg24h && (
+                <p>
+                  {client.outgoingMsgs24h} pesan terkirim dalam 24 jam terakhir
+                  ({formatTimeAgo(client.firstOutgoingMsg24h)})
+                </p>
+              )}
             </TooltipContent>
           </Tooltip>
         )}
@@ -461,6 +504,9 @@ const ClientStatusItem: React.FC<ClientStatusItemProps> = ({
             )}
         </div>
       </div>
+      {rating && rating !== undefined && (
+        <RatingSlider max={10} min={1} value={rating} onChange={setRating} />
+      )}
     </div>
   );
 };

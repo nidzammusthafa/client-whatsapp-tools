@@ -9,8 +9,8 @@ const Page = () => {
   return (
     <div
       className={`container ${
-        open ? "max-w-[calc(100vw-16rem)]" : "max-w-screen"
-      } px-2 sm:px-4 py-4`}
+        open ? "max-w-[calc(100vw-16.75rem)]" : "max-w-screen"
+      } px-2 sm:px-4 py-8`}
     >
       <WABlastSection />
     </div>

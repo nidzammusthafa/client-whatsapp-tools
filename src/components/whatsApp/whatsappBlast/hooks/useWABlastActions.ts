@@ -36,6 +36,8 @@ export const useWABlastActions = () => {
       whatsappWarmerMinMessages: number;
       whatsappWarmerMaxMessages: number;
       whatsappWarmerDelayMs: number;
+      whatsappWarmerMinDelayMs: number;
+      whatsappWarmerMaxDelayMs: number;
       whatsappWarmerLanguage: "en" | "id";
       scheduledAt: string | undefined;
       warmerJobId: string;

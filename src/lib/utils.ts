@@ -67,6 +67,48 @@ export const formatDate = (dateString: string | Date): string | null => {
 };
 
 /**
+ * Mengubah string tanggal ke format "DD-MM-YYYY, HH.mm".
+ * @param dateString String tanggal yang akan diformat.
+ * @returns String tanggal yang sudah diformat, atau null jika input tidak valid.
+ */
+export function formatTimeAgo(dateString: string) {
+  const rtf = new Intl.RelativeTimeFormat("id", { numeric: "auto" });
+
+  const past = new Date(dateString);
+  const now = new Date();
+
+  const seconds = Math.floor((now.getTime() - past.getTime()) / 1000);
+
+  let unit;
+  let value;
+  type RelativeTimeFormatUnit =
+    | "second"
+    | "minute"
+    | "hour"
+    | "day"
+    | "week"
+    | "month"
+    | "quarter"
+    | "year";
+  if (seconds < 60) {
+    return "baru saja";
+  } else if (seconds < 3600) {
+    unit = "minute" as RelativeTimeFormatUnit;
+    value = Math.floor(seconds / 60);
+  } else if (seconds < 86400) {
+    unit = "hour" as RelativeTimeFormatUnit;
+    value = Math.floor(seconds / 3600);
+  } else {
+    unit = "day" as RelativeTimeFormatUnit;
+    value = Math.floor(seconds / 86400);
+  }
+
+  // 5. Format hasilnya menggunakan rtf
+  // Parameter pertama adalah nilai negatif karena waktunya sudah berlalu
+  return rtf.format(-value, unit);
+}
+
+/**
  * Mengubah string menjadi format string wa.
  * @param string String yang akan diubah menjadi bold, italic, dll.
  * @returns html.

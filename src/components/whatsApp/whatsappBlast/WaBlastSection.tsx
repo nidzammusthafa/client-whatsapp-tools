@@ -90,6 +90,10 @@ const WABlastSection: React.FC = () => {
     setWhatsappWarmerMaxMessages,
     whatsappWarmerDelayMs,
     setWhatsappWarmerDelayMs,
+    whatsappWarmerMinDelayMs,
+    setWhatsappWarmerMinDelayMs,
+    whatsappWarmerMaxDelayMs,
+    setWhatsappWarmerMaxDelayMs,
     whatsappWarmerLanguage,
     setWhatsappWarmerLanguage,
     waWarmerJobs,
@@ -118,7 +122,6 @@ const WABlastSection: React.FC = () => {
 
   // BARU: State lokal untuk pekerjaan yang sedang dibuat
   const [newJobId, setNewJobId] = useState(uuidv4()); // ID unik untuk pekerjaan baru
-  console.log(newJobId);
 
   // Dapatkan pekerjaan WA Blast yang sedang dipilih/dilihat
   const currentJob: WABlastProgressUpdate | undefined =
@@ -156,7 +159,9 @@ const WABlastSection: React.FC = () => {
         setEnableWhatsappWarmer(currentJob.enableWhatsappWarmer!);
         setWhatsappWarmerMinMessages(currentJob.whatsappWarmerMinMessages!);
         setWhatsappWarmerMaxMessages(currentJob.whatsappWarmerMaxMessages!);
-        setWhatsappWarmerDelayMs(currentJob.whastappWarmerDelayMs! / 1000);
+        setWhatsappWarmerDelayMs(currentJob.whastappWarmerDelayMs!);
+        setWhatsappWarmerMinDelayMs(currentJob.whatsappWarmerMinDelayMs!);
+        setWhatsappWarmerMaxDelayMs(currentJob.whatsappWarmerMaxDelayMs!);
         setWhatsappWarmerLanguage(currentJob.whatsappWarmerLanguage!);
       }
     }
@@ -167,6 +172,8 @@ const WABlastSection: React.FC = () => {
     // selectedSenderAccountIds,
     setEnableWhatsappWarmer,
     setWhatsappWarmerDelayMs,
+    setWhatsappWarmerMinDelayMs,
+    setWhatsappWarmerMaxDelayMs,
     setWhatsappWarmerLanguage,
     setWhatsappWarmerMaxMessages,
     setWhatsappWarmerMinMessages,
@@ -317,6 +324,12 @@ const WABlastSection: React.FC = () => {
     setWhatsappWarmerMinMessages(jobToEdit.whatsappWarmerMinMessages || 0);
     setWhatsappWarmerMaxMessages(jobToEdit.whatsappWarmerMaxMessages || 0);
     setWhatsappWarmerDelayMs(jobToEdit.whastappWarmerDelayMs! / 1000 || 0);
+    setWhatsappWarmerMinDelayMs(
+      jobToEdit.whatsappWarmerMinDelayMs! / 1000 || 0
+    );
+    setWhatsappWarmerMaxDelayMs(
+      jobToEdit.whatsappWarmerMaxDelayMs! / 1000 || 0
+    );
     setWhatsappWarmerLanguage(jobToEdit.whatsappWarmerLanguage || "en");
 
     // Set newJobId ke jobId yang sedang diedit agar saat disave akan mengupdate job yang sama
@@ -408,6 +421,8 @@ const WABlastSection: React.FC = () => {
       whatsappWarmerMinMessages: whatsappWarmerMinMessages,
       whatsappWarmerMaxMessages: whatsappWarmerMaxMessages,
       whatsappWarmerDelayMs: whatsappWarmerDelayMs,
+      whatsappWarmerMinDelayMs: whatsappWarmerMinDelayMs,
+      whatsappWarmerMaxDelayMs: whatsappWarmerMaxDelayMs,
       whatsappWarmerLanguage: whatsappWarmerLanguage,
       warmerJobId: warmerJobId,
       scheduledAt: scheduledAt ? scheduledAt.toISOString() : undefined,
@@ -424,10 +439,10 @@ const WABlastSection: React.FC = () => {
       uploadedFileName,
       scheduledAt
     );
+
     // Setelah memulai, secara otomatis pilih job yang baru dimulai
     setCurrentSelectedWABlastJobId(newJobId);
   };
-  console.log(messageBlocks);
 
   const handlePauseResumeStop = (action: "pause" | "resume" | "stop") => {
     if (!currentSelectedWABlastJobId) {
@@ -547,9 +562,7 @@ const WABlastSection: React.FC = () => {
         )}
 
         {/* Form Input WA Blast (disembunyikan jika ada job terpilih yang sedang berjalan/dijeda) */}
-        {!currentJob ||
-        currentJob.status === "COMPLETED" ||
-        currentJob.status === "FAILED" ? (
+        {!currentJob || currentJob.status === "FAILED" ? (
           <>
             {/* Bagian Unggah Excel dan Pilih Akun Pengirim */}
             {!uploadedExcelData ? (
@@ -913,10 +926,47 @@ const WABlastSection: React.FC = () => {
                       id="inter-chat-delay-seconds"
                       type="number"
                       value={whatsappWarmerDelayMs}
+                      defaultValue={120}
                       onChange={(e) =>
                         setWhatsappWarmerDelayMs(Number(e.target.value))
                       }
                       min={0}
+                      disabled={isBlastRunning || !isSocketConnected}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="inter-chat-min-delay-ms"
+                      className="text-foreground"
+                    >
+                      Jeda Minimal Antar Pesan (Detik)
+                    </Label>
+                    <Input
+                      id="inter-chat-min-delay-ms"
+                      type="number"
+                      value={whatsappWarmerMinDelayMs}
+                      onChange={(e) =>
+                        setWhatsappWarmerMinDelayMs(Number(e.target.value))
+                      }
+                      min={1}
+                      disabled={isBlastRunning || !isSocketConnected}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="inter-chat-max-delay-ms"
+                      className="text-foreground"
+                    >
+                      Jeda Maksimal Antar Pesan (Detik)
+                    </Label>
+                    <Input
+                      id="inter-chat-max-delay-ms"
+                      type="number"
+                      value={whatsappWarmerMaxDelayMs}
+                      onChange={(e) =>
+                        setWhatsappWarmerMaxDelayMs(Number(e.target.value))
+                      }
+                      min={1}
                       disabled={isBlastRunning || !isSocketConnected}
                     />
                   </div>
@@ -929,6 +979,7 @@ const WABlastSection: React.FC = () => {
                     </Label>
                     <Select
                       value={whatsappWarmerLanguage}
+                      defaultValue="en"
                       onValueChange={(value: "en" | "id") =>
                         setWhatsappWarmerLanguage(value)
                       }

@@ -19,9 +19,11 @@ export const createWaBlastManagerSlice: StateCreator<
   waBlastJobs: {},
   currentSelectedWABlastJobId: null,
   enableWhatsappWarmer: false,
-  whatsappWarmerMinMessages: 5,
-  whatsappWarmerMaxMessages: 10,
+  whatsappWarmerMinMessages: 50,
+  whatsappWarmerMaxMessages: 100,
   whatsappWarmerDelayMs: 10000,
+  whatsappWarmerMinDelayMs: 5000,
+  whatsappWarmerMaxDelayMs: 10000,
   whatsappWarmerLanguage: "en",
   warmerJobId: "",
 
@@ -31,6 +33,10 @@ export const createWaBlastManagerSlice: StateCreator<
   setWhatsappWarmerMaxMessages: (value) =>
     set({ whatsappWarmerMaxMessages: value }),
   setWhatsappWarmerDelayMs: (value) => set({ whatsappWarmerDelayMs: value }),
+  setWhatsappWarmerMinDelayMs: (value) =>
+    set({ whatsappWarmerMinDelayMs: value }),
+  setWhatsappWarmerMaxDelayMs: (value) =>
+    set({ whatsappWarmerMaxDelayMs: value }),
   setWhatsappWarmerLanguage: (value) => set({ whatsappWarmerLanguage: value }),
   setWarmerJobId: (value) => set({ warmerJobId: value }),
 
@@ -169,7 +175,6 @@ export const createWaBlastManagerSlice: StateCreator<
       return;
     }
     socket.emit("whatsapp-stop-blast", { jobId });
-    socket.emit("whatsapp-get-client-status-all");
     get().removeWaBlastJob(jobId); // Optimistically remove from frontend
     setTimeout(() => {
       get().loadWaBlastJobs();

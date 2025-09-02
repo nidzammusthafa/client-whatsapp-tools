@@ -136,6 +136,8 @@ export interface StartWABlastPayload {
   whatsappWarmerMinMessages?: number; // Minimum pesan untuk inter-account chat
   whatsappWarmerMaxMessages?: number; // Maksimum pesan untuk inter-account chat
   whatsappWarmerDelayMs?: number; // Jeda antar pesan dalam inter-account chat (d
+  whatsappWarmerMinDelayMs?: number; // Minimum jeda antar pesan dalam inter-account chat
+  whatsappWarmerMaxDelayMs?: number; // Maksimum jeda antar pesan dalam inter-account chat
   fileName?: string;
   scheduledAt?: Date;
 }

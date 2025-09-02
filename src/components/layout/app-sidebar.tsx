@@ -24,9 +24,7 @@ import {
   CollapsibleTrigger,
   CollapsibleContent,
 } from "@/components/ui/collapsible";
-import { Button } from "@/components/ui/button";
 import {
-  Plus,
   Calendar,
   PlugZap,
   Settings,
@@ -48,6 +46,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import RefreshSocket from "./RefreshSocket";
 import { Separator } from "../ui/separator";
 import { useWhatsAppManager } from "@/hooks/useWhatsappManager";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 interface MenuItem {
   title: string;
@@ -171,7 +170,7 @@ export function AppSidebar() {
   }, []);
 
   return (
-    <Sidebar>
+    <Sidebar collapsible="icon">
       <SidebarContent className="p-2 flex flex-col gap-2">
         {items.map((item, i) => {
           const subItems = item.subMenu || item.submenu;
@@ -203,28 +202,22 @@ export function AppSidebar() {
                             key={j}
                             className="flex items-center"
                           >
-                            <SidebarMenuButton
-                              asChild
-                              isActive={pathname === sub.url}
-                            >
-                              <Link href={sub.url || "#"}>
-                                <sub.icon className="h-4 w-4" />
-                                <span>{sub.title}</span>
-                              </Link>
-                            </SidebarMenuButton>
-
-                            {sub.title !== "WhatsApp Messages" && (
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="ml-auto h-6 w-6"
-                                onClick={() =>
-                                  console.log(`Tambah ${sub.title}`)
-                                }
-                              >
-                                <Plus className="h-4 w-4" />
-                              </Button>
-                            )}
+                            <Tooltip>
+                              <TooltipTrigger className="w-full">
+                                <SidebarMenuButton
+                                  asChild
+                                  isActive={pathname === sub.url}
+                                >
+                                  <Link href={sub.url || "#"}>
+                                    <sub.icon className="h-4 w-4" />
+                                    <span>{sub.title}</span>
+                                  </Link>
+                                </SidebarMenuButton>
+                              </TooltipTrigger>
+                              <TooltipContent side="right">
+                                <p>{sub.title}</p>
+                              </TooltipContent>
+                            </Tooltip>
                           </SidebarMenuItem>
                         ))}
                       </SidebarMenu>
@@ -245,19 +238,6 @@ export function AppSidebar() {
                     <span>{item.title}</span>
                   </Link>
                 </SidebarMenuButton>
-
-                {/* Kecuali Home dan WhatsApp Messages */}
-                {item.title !== "Home" &&
-                  item.title !== "WhatsApp Messages" && (
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="ml-auto h-6 w-6"
-                      onClick={() => console.log(`Tambah ${item.title}`)}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  )}
               </SidebarMenuItem>
             </SidebarMenu>
           );

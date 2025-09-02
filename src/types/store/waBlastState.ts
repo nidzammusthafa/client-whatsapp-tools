@@ -12,6 +12,8 @@ export interface WaBlastState {
   whatsappWarmerMinMessages: number;
   whatsappWarmerMaxMessages: number;
   whatsappWarmerDelayMs: number;
+  whatsappWarmerMinDelayMs: number;
+  whatsappWarmerMaxDelayMs: number;
   whatsappWarmerLanguage: "en" | "id";
   warmerJobId: string;
 }
@@ -39,6 +41,8 @@ export interface WaBlastActions {
       whatsappWarmerMinMessages: number; // Minimal pesan terkirim sebelum obrolan
       whatsappWarmerMaxMessages: number; // Maksimal pesan terkirim sebelum obrolan
       whatsappWarmerDelayMs: number; // Durasi jeda obrolan antar akun
+      whatsappWarmerMinDelayMs: number; // Minimal durasi jeda obrolan
+      whatsappWarmerMaxDelayMs: number; // Maksimal durasi jeda obrolan
       whatsappWarmerLanguage: "en" | "id";
       warmerJobId: string;
     },
@@ -56,6 +60,8 @@ export interface WaBlastActions {
   setWhatsappWarmerMinMessages: (value: number) => void;
   setWhatsappWarmerMaxMessages: (value: number) => void;
   setWhatsappWarmerDelayMs: (value: number) => void;
+  setWhatsappWarmerMinDelayMs: (value: number) => void;
+  setWhatsappWarmerMaxDelayMs: (value: number) => void;
   setWhatsappWarmerLanguage: (value: "en" | "id") => void;
   setWarmerJobId: (value: string) => void;
   setSelectedSenderAccountIds: (ids: string[]) => void;

@@ -5,6 +5,7 @@ import { useWhatsAppStore } from "@/stores/whatsapp";
 import { MessageCircleMore } from "lucide-react";
 import ConversationList from "./ConversationList";
 import ConversationWindow from "./ConversationWindow";
+import { useSidebar } from "@/components/ui/sidebar";
 
 /**
  * Komponen utama untuk fitur Conservation, diadaptasi untuk tampilan mobile.
@@ -18,6 +19,7 @@ export const ConversationDashboard = () => {
     initialSettingsLoaded,
     isSocketConnected,
   } = useWhatsAppStore();
+  const { open } = useSidebar();
 
   // Muat data awal saat terhubung ke socket
   useEffect(() => {
@@ -34,7 +36,11 @@ export const ConversationDashboard = () => {
   }, [loadLabeledChats, initialSettingsLoaded]);
 
   return (
-    <div className="flex w-full h-screen overflow-hidden top-0">
+    <div
+      className={`flex h-screen w-screen overflow-hidden top-0 ${
+        open ? "max-w-[calc(100vw-16rem)]" : "min-w-screen"
+      }`}
+    >
       <div className="hidden md:flex flex-1 w-full h-full">
         <ConversationList />
 

@@ -13,7 +13,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <SidebarProvider defaultOpen={false}>
       <AppSidebar />
-      <main className="flex flex-col w-full">
+      <main className="flex flex-col max-w-screen min-w-[calc(100vw-16rem)] mx-auto min-h-screen overflow-x-hidden">
         <SidebarTrigger className="fixed z-40" />
         {globalError && (
           <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
