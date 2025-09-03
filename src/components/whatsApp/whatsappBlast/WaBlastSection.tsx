@@ -147,12 +147,10 @@ const WABlastSection: React.FC = () => {
         // atau kita perlu memuat ulang dari `WABlastJobRecord` di backend.
         // Untuk saat ini, kita hanya bisa memulihkan apa yang ada di WABlastProgressUpdate.
         setSelectedSenderAccountIds(currentJob.senderAccountIds || []);
-        setMinDelay(currentJob.minDelayMs! / 1000);
-        setMaxDelay(currentJob.maxDelayMs! / 1000);
+        setMinDelay(currentJob.minDelayMs!);
+        setMaxDelay(currentJob.maxDelayMs!);
         setDelayAfterNRecipients(currentJob.delayAfterNRecipients!);
-        setDelayAfterNRecipientsSeconds(
-          currentJob.delayAfterNRecipientsMs! / 1000
-        );
+        setDelayAfterNRecipientsSeconds(currentJob.delayAfterNRecipientsMs!);
         // messageBlocks, uploadedExcelData, selectedPhoneNumberColumn TIDAK ADA di WABlastProgressUpdate
         // sehingga tidak bisa dipulihkan secara otomatis ke form.
         // Ini adalah keterbatasan desain saat ini, perlu dipertimbangkan jika penting.

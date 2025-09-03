@@ -130,7 +130,7 @@ const items: MenuItem[] = [
 export function AppSidebar() {
   useWhatsAppManager();
   const pathname = usePathname();
-  const { setOpenMobile } = useSidebar();
+  const { setOpenMobile, open } = useSidebar();
 
   React.useEffect(() => {
     const socket = getWhatsappSocket();
@@ -188,7 +188,7 @@ export function AppSidebar() {
                     className="hover:bg-accent/40"
                     onClick={() => setOpenMobile(false)}
                   >
-                    <CollapsibleTrigger>
+                    <CollapsibleTrigger className={`${!open && "hidden"}`}>
                       {item.title}
                       <ChevronDown className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180" />
                     </CollapsibleTrigger>
