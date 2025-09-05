@@ -183,11 +183,7 @@ export function AppSidebar() {
                 key={i}
               >
                 <SidebarGroup className="p-0">
-                  <SidebarGroupLabel
-                    asChild
-                    className="hover:bg-accent/40"
-                    onClick={() => setOpenMobile(false)}
-                  >
+                  <SidebarGroupLabel asChild className="hover:bg-accent/40">
                     <CollapsibleTrigger className={`${!open && "hidden"}`}>
                       {item.title}
                       <ChevronDown className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180" />
@@ -201,6 +197,7 @@ export function AppSidebar() {
                           <SidebarMenuItem
                             key={j}
                             className="flex items-center"
+                            onClick={() => setOpenMobile(false)}
                           >
                             <Tooltip>
                               <TooltipTrigger className="w-full">
@@ -231,7 +228,10 @@ export function AppSidebar() {
           // ✅ Kalau single item
           return (
             <SidebarMenu key={i}>
-              <SidebarMenuItem className="flex items-center">
+              <SidebarMenuItem
+                className="flex items-center"
+                onClick={() => setOpenMobile(false)}
+              >
                 <SidebarMenuButton asChild isActive={pathname === item.url}>
                   <Link href={item.url || "#"}>
                     <item.icon className="h-4 w-4" />

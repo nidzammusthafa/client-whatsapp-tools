@@ -38,7 +38,7 @@ export const ConversationDashboard = () => {
   return (
     <div
       className={`flex h-screen w-screen overflow-hidden top-0 ${
-        open ? "max-w-[calc(100vw-16rem)]" : "min-w-screen"
+        open ? "max-w-[calc(100vw-16rem)]" : "max-w-[calc(100vw-3rem)]"
       }`}
     >
       <div className="hidden md:flex flex-1 w-full h-full">
