@@ -140,24 +140,15 @@ const WABlastSection: React.FC = () => {
         JSON.stringify(currentJob.senderAccountIds) !==
           JSON.stringify(selectedSenderAccountIds)
       ) {
-        // Perlu memuat ulang semua konfigurasi dari `currentJob`
-        // Catatan: `excelData`, `messageBlocks` tidak ada di WABlastProgressUpdate.
-        // Ini adalah batasan karena kita hanya menyimpan progress, bukan seluruh konfigurasi awal.
-        // Untuk memulihkan konfigurasi lengkap, WABlastProgressUpdate perlu diperluas
-        // atau kita perlu memuat ulang dari `WABlastJobRecord` di backend.
-        // Untuk saat ini, kita hanya bisa memulihkan apa yang ada di WABlastProgressUpdate.
         setSelectedSenderAccountIds(currentJob.senderAccountIds || []);
         setMinDelay(currentJob.minDelayMs!);
         setMaxDelay(currentJob.maxDelayMs!);
         setDelayAfterNRecipients(currentJob.delayAfterNRecipients!);
         setDelayAfterNRecipientsSeconds(currentJob.delayAfterNRecipientsMs!);
-        // messageBlocks, uploadedExcelData, selectedPhoneNumberColumn TIDAK ADA di WABlastProgressUpdate
-        // sehingga tidak bisa dipulihkan secara otomatis ke form.
-        // Ini adalah keterbatasan desain saat ini, perlu dipertimbangkan jika penting.
         setEnableWhatsappWarmer(currentJob.enableWhatsappWarmer!);
         setWhatsappWarmerMinMessages(currentJob.whatsappWarmerMinMessages!);
         setWhatsappWarmerMaxMessages(currentJob.whatsappWarmerMaxMessages!);
-        setWhatsappWarmerDelayMs(currentJob.whastappWarmerDelayMs!);
+        setWhatsappWarmerDelayMs(currentJob.whatsappWarmerDelayMs!);
         setWhatsappWarmerMinDelayMs(currentJob.whatsappWarmerMinDelayMs!);
         setWhatsappWarmerMaxDelayMs(currentJob.whatsappWarmerMaxDelayMs!);
         setWhatsappWarmerLanguage(currentJob.whatsappWarmerLanguage!);
@@ -306,10 +297,10 @@ const WABlastSection: React.FC = () => {
 
     // Setel ulang semua state form dengan data dari pekerjaan yang akan diedit
     setSelectedSenderAccountIds(jobToEdit.senderAccountIds || []);
-    setMinDelay(jobToEdit.minDelayMs! / 1000);
-    setMaxDelay(jobToEdit.maxDelayMs! / 1000);
+    setMinDelay(jobToEdit.minDelayMs!);
+    setMaxDelay(jobToEdit.maxDelayMs!);
     setDelayAfterNRecipients(jobToEdit.delayAfterNRecipients!);
-    setDelayAfterNRecipientsSeconds(jobToEdit.delayAfterNRecipientsMs! / 1000);
+    setDelayAfterNRecipientsSeconds(jobToEdit.delayAfterNRecipientsMs!);
     setMessageBlocks(jobToEdit.messageBlocks || []); // Ini penting!
     setScheduledAt(
       jobToEdit.scheduledAt ? new Date(jobToEdit.scheduledAt) : undefined
@@ -321,21 +312,12 @@ const WABlastSection: React.FC = () => {
     setEnableWhatsappWarmer(jobToEdit.enableWhatsappWarmer || false);
     setWhatsappWarmerMinMessages(jobToEdit.whatsappWarmerMinMessages || 0);
     setWhatsappWarmerMaxMessages(jobToEdit.whatsappWarmerMaxMessages || 0);
-    setWhatsappWarmerDelayMs(jobToEdit.whastappWarmerDelayMs! / 1000 || 0);
-    setWhatsappWarmerMinDelayMs(
-      jobToEdit.whatsappWarmerMinDelayMs! / 1000 || 0
-    );
-    setWhatsappWarmerMaxDelayMs(
-      jobToEdit.whatsappWarmerMaxDelayMs! / 1000 || 0
-    );
+    setWhatsappWarmerDelayMs(jobToEdit.whatsappWarmerDelayMs! || 0);
+    setWhatsappWarmerMinDelayMs(jobToEdit.whatsappWarmerMinDelayMs! || 0);
+    setWhatsappWarmerMaxDelayMs(jobToEdit.whatsappWarmerMaxDelayMs! || 0);
     setWhatsappWarmerLanguage(jobToEdit.whatsappWarmerLanguage || "en");
 
-    // Set newJobId ke jobId yang sedang diedit agar saat disave akan mengupdate job yang sama
     setNewJobId(jobToEdit.jobId);
-
-    // Hapus pekerjaan dari daftar pekerjaan yang sedang berjalan (jika ada)
-    // Ini agar tidak ada duplikasi dan pekerjaan bisa diedit sebagai "baru"
-    // removeWaBlastJob(jobToEdit.jobId);
     setCurrentSelectedWABlastJobId(null); // Kembali ke mode "buat
   };
 
@@ -411,10 +393,10 @@ const WABlastSection: React.FC = () => {
     }
 
     const delayConfig = {
-      minDelayMs: minDelay * 1000,
-      maxDelayMs: maxDelay * 1000,
+      minDelayMs: minDelay,
+      maxDelayMs: maxDelay,
       delayAfterNRecipients: delayAfterNRecipients,
-      delayAfterNRecipientsMs: delayAfterNRecipientsSeconds * 1000,
+      delayAfterNRecipientsMs: delayAfterNRecipientsSeconds,
       enableWhatsappWarmer: enableWhatsappWarmer,
       whatsappWarmerMinMessages: whatsappWarmerMinMessages,
       whatsappWarmerMaxMessages: whatsappWarmerMaxMessages,
@@ -793,6 +775,7 @@ const WABlastSection: React.FC = () => {
                   id="min-delay-blast"
                   type="number"
                   value={minDelay}
+                  defaultValue={5}
                   onChange={(e) => setMinDelay(Number(e.target.value))}
                   min={0}
                   disabled={isBlastRunning || !isSocketConnected}
@@ -807,6 +790,7 @@ const WABlastSection: React.FC = () => {
                   id="max-delay-blast"
                   type="number"
                   value={maxDelay}
+                  defaultValue={10}
                   onChange={(e) => setMaxDelay(Number(e.target.value))}
                   min={0}
                   disabled={isBlastRunning || !isSocketConnected}

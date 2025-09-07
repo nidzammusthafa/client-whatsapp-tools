@@ -165,10 +165,10 @@ export const useWABlastForm = () => {
     // Reset all form state with data from the job to be edited
     // (Setel ulang semua state form dengan data dari pekerjaan yang akan diedit)
     setSelectedSenderAccountIds(jobToEdit.senderAccountIds || []);
-    setMinDelay(jobToEdit.minDelayMs! / 1000);
-    setMaxDelay(jobToEdit.maxDelayMs! / 1000);
+    setMinDelay(jobToEdit.minDelayMs!);
+    setMaxDelay(jobToEdit.maxDelayMs!);
     setDelayAfterNRecipients(jobToEdit.delayAfterNRecipients!);
-    setDelayAfterNRecipientsSeconds(jobToEdit.delayAfterNRecipientsMs! / 1000);
+    setDelayAfterNRecipientsSeconds(jobToEdit.delayAfterNRecipientsMs!);
     setMessageBlocks(jobToEdit.messageBlocks || []);
     setScheduledAt(
       jobToEdit.scheduledAt ? new Date(jobToEdit.scheduledAt) : undefined
@@ -180,7 +180,7 @@ export const useWABlastForm = () => {
     setEnableWhatsappWarmer(jobToEdit.enableWhatsappWarmer || false);
     setWhatsappWarmerMinMessages(jobToEdit.whatsappWarmerMinMessages || 0);
     setWhatsappWarmerMaxMessages(jobToEdit.whatsappWarmerMaxMessages || 0);
-    setWhatsappWarmerDelayMs(jobToEdit.whastappWarmerDelayMs! / 1000 || 0);
+    setWhatsappWarmerDelayMs(jobToEdit.whatsappWarmerDelayMs! || 0);
     setWhatsappWarmerLanguage(jobToEdit.whatsappWarmerLanguage || "en");
 
     setNewJobId(jobToEdit.jobId);

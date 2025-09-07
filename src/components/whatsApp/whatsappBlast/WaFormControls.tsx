@@ -348,6 +348,7 @@ const WAFormControls: React.FC<WAFormControlsProps> = ({
             id="min-delay-blast"
             type="number"
             value={minDelay}
+            defaultValue={5}
             onChange={(e) => setMinDelay(Number(e.target.value))}
             min={0}
             disabled={isBlastRunning || !isSocketConnected}
@@ -362,6 +363,7 @@ const WAFormControls: React.FC<WAFormControlsProps> = ({
             id="max-delay-blast"
             type="number"
             value={maxDelay}
+            defaultValue={10}
             onChange={(e) => setMaxDelay(Number(e.target.value))}
             min={0}
             disabled={isBlastRunning || !isSocketConnected}

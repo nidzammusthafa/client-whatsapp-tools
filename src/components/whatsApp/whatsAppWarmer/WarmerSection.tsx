@@ -115,10 +115,10 @@ const WarmerSection: React.FC = () => {
     }
 
     startWarmer(selectedClientIds, totalMessages, messages, {
-      minDelayMs: minDelay * 1000,
-      maxDelayMs: maxDelay * 1000,
+      minDelayMs: minDelay,
+      maxDelayMs: maxDelay,
       delayAfterNMessages: delayAfterNMessages,
-      delayAfterNMessagesMs: delayAfterNMessagesSeconds * 1000,
+      delayAfterNMessagesMs: delayAfterNMessagesSeconds,
     });
   };
 
@@ -144,10 +144,10 @@ const WarmerSection: React.FC = () => {
         waWarmerJobs[warmerJobStatus.jobId].delayAfterNMessages
       );
       setDelayAfterNMessagesSeconds(
-        waWarmerJobs[warmerJobStatus.jobId].delayAfterNMessagesMs / 1000
+        waWarmerJobs[warmerJobStatus.jobId].delayAfterNMessagesMs
       );
-      setMinDelay(waWarmerJobs[warmerJobStatus.jobId].minDelayMs / 1000);
-      setMaxDelay(waWarmerJobs[warmerJobStatus.jobId].maxDelayMs / 1000);
+      setMinDelay(waWarmerJobs[warmerJobStatus.jobId].minDelayMs);
+      setMaxDelay(waWarmerJobs[warmerJobStatus.jobId].maxDelayMs);
       setMessagesInput(waWarmerJobs[warmerJobStatus.jobId].messages.join("\n"));
     }
   };

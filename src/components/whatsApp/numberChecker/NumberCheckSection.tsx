@@ -150,8 +150,8 @@ const NumberCheckSection: React.FC = () => {
     }
 
     const delayConfig = {
-      minDelayMs: minDelay * 1000,
-      maxDelayMs: maxDelay * 1000,
+      minDelayMs: minDelay,
+      maxDelayMs: maxDelay,
       delayAfterNNumbers: delayAfterNNumbers,
     };
 

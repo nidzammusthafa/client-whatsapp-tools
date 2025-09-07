@@ -121,10 +121,10 @@ const WABlastJobControls: React.FC<WABlastJobControlsProps> = ({
                 selectedSenderAccountIds,
                 messageBlocks,
                 {
-                  minDelayMs: minDelay * 1000,
-                  maxDelayMs: maxDelay * 1000,
+                  minDelayMs: minDelay,
+                  maxDelayMs: maxDelay,
                   delayAfterNRecipients: delayAfterNRecipients,
-                  delayAfterNRecipientsMs: delayAfterNRecipientsSeconds * 1000,
+                  delayAfterNRecipientsMs: delayAfterNRecipientsSeconds,
                   enableWhatsappWarmer: enableWhatsappWarmer,
                   whatsappWarmerMinMessages: whatsappWarmerMinMessages,
                   whatsappWarmerMaxMessages: whatsappWarmerMaxMessages,

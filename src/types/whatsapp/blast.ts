@@ -80,7 +80,7 @@ export interface WABlastProgressUpdate {
   enableWhatsappWarmer?: boolean;
   whatsappWarmerMinMessages?: number;
   whatsappWarmerMaxMessages?: number;
-  whastappWarmerDelayMs?: number;
+  whatsappWarmerDelayMs?: number;
   whatsappWarmerMinDelayMs?: number;
   whatsappWarmerMaxDelayMs?: number;
   whatsappWarmerLanguage?: "en" | "id";

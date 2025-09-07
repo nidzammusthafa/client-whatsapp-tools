@@ -35,6 +35,7 @@ export const DelayConfig: React.FC<{
         id="min-delay-warmer"
         type="number"
         value={minDelay}
+        defaultValue={5}
         onChange={(e) => setMinDelay(Number(e.target.value))}
         min={0}
         disabled={isWarmerRunning || !isSocketConnected}
@@ -49,6 +50,7 @@ export const DelayConfig: React.FC<{
         id="max-delay-warmer"
         type="number"
         value={maxDelay}
+        defaultValue={10}
         onChange={(e) => setMaxDelay(Number(e.target.value))}
         min={0}
         disabled={isWarmerRunning || !isSocketConnected}

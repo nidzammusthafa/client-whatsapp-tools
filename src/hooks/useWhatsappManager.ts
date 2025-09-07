@@ -236,25 +236,6 @@ export const useWhatsAppManager = () => {
       toast.info("Daftar whitelist diperbarui dari server.");
     };
 
-    const onAllActiveBlastJobs = (jobs: WABlastProgressUpdate[]) => {
-      const jobsMap: Record<string, WABlastProgressUpdate> = {};
-      jobs.forEach((job) => {
-        jobsMap[job.jobId] = job;
-      });
-      setWaBlastJobs(jobsMap); // Mengisi ulang semua job
-      // Jika ada job yang sedang berjalan/dijeda, pilih yang pertama sebagai default
-      if (jobs.length > 0) {
-        // Pilih job yang statusnya running/paused sebagai yang pertama ditampilkan
-        const firstActiveJob = jobs.find(
-          (j) => j.status === "IN_PROGRESS" || j.status === "PAUSED"
-        );
-        setCurrentSelectedWABlastJobId(
-          firstActiveJob ? firstActiveJob.jobId : jobs[0].jobId
-        );
-      } else {
-        setCurrentSelectedWABlastJobId(null);
-      }
-    };
     const onAllBlastJobs = (jobs: WABlastProgressUpdate[]) => {
       const jobsMap: Record<string, WABlastProgressUpdate> = {};
       jobs.forEach((job) => {
@@ -310,7 +291,6 @@ export const useWhatsAppManager = () => {
     socket.on("whatsapp-stored-message-updated", onStoredMessageUpdated);
     socket.on("whatsapp-initial-settings", onInitialSettings);
     socket.on("whatsapp-whitelist-updated", onWhitelistUpdated);
-    socket.on("whatsapp-all-active-blast-jobs", onAllActiveBlastJobs);
     socket.on("whatsapp-blast-all-jobs", onAllBlastJobs);
     socket.on("whatsapp-blast-job-removed", onWABlastJobRemoved);
     socket.on("whatsapp-blast-job-for-edit", onEditWABlastJob);
@@ -337,7 +317,6 @@ export const useWhatsAppManager = () => {
       socket.off("whatsapp-stored-message-updated", onStoredMessageUpdated);
       socket.off("whatsapp-initial-settings", onInitialSettings);
       socket.off("whatsapp-whitelist-updated", onWhitelistUpdated);
-      socket.off("whatsapp-all-active-blast-jobs", onAllActiveBlastJobs);
       socket.off("whatsapp-blast-all-jobs", onAllBlastJobs);
       socket.off("whatsapp-blast-job-removed", onWABlastJobRemoved);
       socket.off("whatsapp-blast-job-for-edit", onEditWABlastJob);
