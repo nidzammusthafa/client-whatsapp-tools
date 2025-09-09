@@ -15,6 +15,7 @@ import {
   PauseCircle,
   Star,
   Info,
+  ScanQrCode,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -39,6 +40,7 @@ import { WhatsAppClientStatusUpdate } from "@/types";
 import { RatingSlider } from "./RatingSlider";
 import { useUrlStore } from "@/stores/whatsapp/socketStore";
 import { formatTimeAgo } from "@/lib/utils";
+import { useWhatsAppStore } from "@/stores/whatsapp";
 
 const NEXT_PUBLIC_WHATSAPP_SERVER_URL = `${
   useUrlStore.getState().url
@@ -68,6 +70,9 @@ const ClientStatusItem: React.FC<ClientStatusItemProps> = ({
   const [newAccountId, setNewAccountId] = useState<string>(client.accountId);
   const [renameError, setRenameError] = useState<string | null>(null);
   const [rating, setRating] = useState(client.rating || undefined);
+
+  const { setShowQrDialog, setCurrentQrAccountId, setCurrentQrCode } =
+    useWhatsAppStore();
 
   const invalidCharsRegex = /[^a-zA-Z0-9-_]/g;
 
@@ -99,6 +104,14 @@ const ClientStatusItem: React.FC<ClientStatusItemProps> = ({
     }, 1000);
     return () => clearTimeout(handler);
   }, [client.accountId, client.rating, rating]);
+  useEffect(() => {
+    if (client.qrCode) {
+      setCurrentQrCode(client.qrCode);
+      toast.info(
+        `QR Code updated for ${client.accountId} telah diperbarui. Silakan scan ulang...`
+      );
+    }
+  }, [client.accountId, client.qrCode, setCurrentQrCode]);
 
   const getStatusColorClass = (
     status: WhatsAppClientStatusUpdate["status"]
@@ -368,7 +381,27 @@ const ClientStatusItem: React.FC<ClientStatusItemProps> = ({
         </div>
         {/* Tombol Aksi */}
         <div className="flex flex-wrap gap-2 justify-center sm:justify-end flex-1 min-w-0">
-          {" "}
+          {client.status === "qr" && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={() => {
+                    setCurrentQrAccountId(client.accountId);
+                    setCurrentQrCode(client.qrCode);
+                    setShowQrDialog(true);
+                  }}
+                  size="sm"
+                  variant="default"
+                  className="flex-grow sm:flex-grow-0"
+                >
+                  <ScanQrCode className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Scan QRCode</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
           {isClientActive || client.status === "loading" ? (
             <>
               <Tooltip>

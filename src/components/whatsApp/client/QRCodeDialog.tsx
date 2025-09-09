@@ -40,8 +40,6 @@ const QrCodeDialog: React.FC = () => {
         <div className="flex flex-col items-center justify-center py-4">
           {currentQrCode ? (
             <div className="bg-background p-4 rounded-lg shadow border">
-              {" "}
-              {/* Menggunakan bg-background */}
               <QRCodeCanvas
                 value={currentQrCode}
                 level="H"
@@ -52,11 +50,7 @@ const QrCodeDialog: React.FC = () => {
               />
             </div>
           ) : (
-            <p className="text-muted-foreground">
-              {" "}
-              {/* Menggunakan text-muted-foreground */}
-              Memuat QR Code...
-            </p>
+            <p className="text-muted-foreground">Memuat QR Code...</p>
           )}
           <p className="text-sm text-muted-foreground mt-4 text-center">
             {" "}
