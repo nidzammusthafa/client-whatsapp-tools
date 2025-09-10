@@ -15,6 +15,7 @@ import { UploadZone } from "@/components/UploadZone";
 import { Address } from "@/types/whatsapp/address";
 import { Switch } from "@/components/ui/switchs";
 import { useUrlStore } from "@/stores/whatsapp/socketStore";
+import { Input } from "@/components/ui/input";
 
 // Deklarasi global untuk library XLSX
 declare const XLSX: typeof import("xlsx");
@@ -29,6 +30,8 @@ const NEXT_PUBLIC_WHATSAPP_SERVER_URL = `${
 }/api/whatsapp`;
 interface ExcelDataManagementProps {
   onDataSubmitted: () => void;
+  initialData?: ExcelRow[] | null;
+  hideUploadZone?: boolean;
 }
 
 /**
@@ -37,6 +40,8 @@ interface ExcelDataManagementProps {
  */
 const ExcelDataManagement: React.FC<ExcelDataManagementProps> = ({
   onDataSubmitted,
+  initialData = null,
+  hideUploadZone = false,
 }) => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [excelData, setExcelData] = useState<ExcelRow[] | null>(null);
@@ -46,6 +51,11 @@ const ExcelDataManagement: React.FC<ExcelDataManagementProps> = ({
   );
   const [hasReceivedMessage, setHasReceivedMessage] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [businessCategorySource, setBusinessCategorySource] = useState<
+    "excel" | "manual"
+  >("excel");
+  const [manualBusinessCategory, setManualBusinessCategory] =
+    useState<string>("");
 
   // Daftar kolom database yang wajib dan opsional
   const requiredDbColumns = ["name", "address", "phoneNumber"];
@@ -78,6 +88,92 @@ const ExcelDataManagement: React.FC<ExcelDataManagementProps> = ({
       document.body.removeChild(script);
     };
   }, []);
+
+  useEffect(() => {
+    if (initialData && initialData.length > 0) {
+      const headers = Object.keys(initialData[0]);
+      setExcelData(initialData);
+      setExcelColumns(headers);
+      setUploadedFile(new File([], "Pre-loaded Data"));
+      toast.success(
+        "Data berhasil dimuat. Silakan petakan kolom untuk disimpan."
+      );
+    }
+  }, [initialData]);
+
+  useEffect(() => {
+    if (excelColumns.length === 0) {
+      setColumnMappings({});
+      return;
+    }
+
+    const autoMapColumns = () => {
+      const newMappings: Record<string, string> = {};
+      const allDbColumns = [...requiredDbColumns, ...optionalDbColumns];
+
+      const mappingSuggestions: Record<string, string[]> = {
+        name: ["name", "nama"],
+        address: ["address", "alamat"],
+        phoneNumber: [
+          "phonenumber",
+          "phone",
+          "telepon",
+          "nomor telepon",
+          "no hp",
+        ],
+        rating: ["rating"],
+        reviews: ["reviews", "review"],
+        website: ["website", "web"],
+        email: ["email"],
+        latitude: ["latitude", "lat"],
+        longitude: ["longitude", "lng", "long"],
+        postalCode: ["postalcode", "postal code", "kodepos"],
+        odp: ["odp"],
+        distance: ["distance", "jarak"],
+        city: ["city", "kota"],
+        state: ["state", "provinsi", "propinsi"],
+        country: ["country", "negara"],
+        url: ["url", "link"],
+        businessName: [
+          "businessname",
+          "business name",
+          "nama bisnis",
+          "nama usaha",
+        ],
+        businessCategory: [
+          "businesscategory",
+          "business category",
+          "kategori bisnis",
+          "kategori usaha",
+        ],
+      };
+
+      const excelColMap = new Map<string, string>();
+      excelColumns.forEach((col) => {
+        excelColMap.set(String(col).toLowerCase(), col);
+      });
+
+      allDbColumns.forEach((dbCol) => {
+        const suggestions = mappingSuggestions[dbCol] || [dbCol.toLowerCase()];
+        for (const suggestion of suggestions) {
+          if (excelColMap.has(suggestion)) {
+            newMappings[dbCol] = excelColMap.get(suggestion)!;
+            break;
+          }
+        }
+      });
+
+      if (Object.keys(newMappings).length > 0) {
+        setColumnMappings(newMappings);
+        toast.info(
+          `${Object.keys(newMappings).length} kolom berhasil dipetakan secara otomatis.`
+        );
+      }
+    };
+
+    autoMapColumns();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [excelColumns]);
 
   const handleFileUpload = useCallback((files: File[] | File) => {
     const file = Array.isArray(files) ? files[0] : files;
@@ -165,6 +261,11 @@ const ExcelDataManagement: React.FC<ExcelDataManagementProps> = ({
             mappedAddress[dbCol as keyof Address] = row[excelCol];
           }
         }
+
+        if (businessCategorySource === "manual") {
+          mappedAddress.businessCategory = manualBusinessCategory;
+        }
+
         return {
           ...mappedAddress,
           isBusiness: true, // Default to true as per model
@@ -228,31 +329,37 @@ const ExcelDataManagement: React.FC<ExcelDataManagementProps> = ({
       <CardContent className="space-y-6">
         <div className="space-y-2">
           {!uploadedFile ? (
-            <UploadZone
-              onFilesSelected={handleFileUpload}
-              accept=".xlsx,.xls"
-              label="Seret atau klik untuk mengunggah file Excel (.xlsx, .xls)"
-              disabled={isSubmitting}
-            />
+            !hideUploadZone && (
+              <UploadZone
+                onFilesSelected={handleFileUpload}
+                accept=".xlsx,.xls"
+                label="Seret atau klik untuk mengunggah file Excel (.xlsx, .xls)"
+                disabled={isSubmitting}
+              />
+            )
           ) : (
             <div className="flex items-center space-x-2 p-3 border rounded-md bg-green-50/50 dark:bg-green-900/10">
               <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
               <p className="text-sm font-medium">
-                {uploadedFile.name} berhasil diunggah.
+                {initialData
+                  ? "Data log dimuat."
+                  : `${uploadedFile.name} berhasil diunggah.`}
               </p>
-              <Button
-                onClick={() => {
-                  setUploadedFile(null);
-                  setExcelData(null);
-                  setExcelColumns([]);
-                  setColumnMappings({});
-                }}
-                variant="ghost"
-                size="sm"
-                className="ml-auto"
-              >
-                Ganti File
-              </Button>
+              {!hideUploadZone && (
+                <Button
+                  onClick={() => {
+                    setUploadedFile(null);
+                    setExcelData(null);
+                    setExcelColumns([]);
+                    setColumnMappings({});
+                  }}
+                  variant="ghost"
+                  size="sm"
+                  className="ml-auto"
+                >
+                  Ganti File
+                </Button>
+              )}
             </div>
           )}
         </div>
@@ -265,32 +372,95 @@ const ExcelDataManagement: React.FC<ExcelDataManagementProps> = ({
                 Petakan Kolom Data
               </Label>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[...requiredDbColumns, ...optionalDbColumns].map((dbCol) => (
-                  <div key={dbCol} className="space-y-1">
-                    <Label htmlFor={`map-${dbCol}`} className="text-sm">
-                      {dbCol.charAt(0).toUpperCase() + dbCol.slice(1)}{" "}
-                      {requiredDbColumns.includes(dbCol) && "*"}
-                    </Label>
-                    <Select
-                      onValueChange={(value) => handleMapChange(dbCol, value)}
-                      value={columnMappings[dbCol] || ""}
-                      disabled={isSubmitting}
-                    >
-                      <SelectTrigger>
-                        <SelectValue
-                          placeholder={`Pilih kolom untuk ${dbCol}...`}
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {excelColumns.map((excelCol) => (
-                          <SelectItem key={excelCol} value={excelCol}>
-                            {excelCol}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                ))}
+                {[...requiredDbColumns, ...optionalDbColumns].map((dbCol) => {
+                  if (dbCol === "businessCategory") {
+                    return (
+                      <div key={dbCol} className="space-y-1">
+                        <Label className="text-sm">Category</Label>
+                        {businessCategorySource === "excel" ? (
+                          <Select
+                            onValueChange={(value) =>
+                              handleMapChange(dbCol, value)
+                            }
+                            value={columnMappings[dbCol] || ""}
+                            disabled={isSubmitting}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Pilih kolom untuk businessCategory..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {excelColumns.map((excelCol) => (
+                                <SelectItem key={excelCol} value={excelCol}>
+                                  {excelCol}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <Input
+                            id="manual-business-category"
+                            className="w-full"
+                            value={manualBusinessCategory}
+                            onChange={(e) =>
+                              setManualBusinessCategory(e.target.value)
+                            }
+                            placeholder="Masukkan kategori bisnis"
+                            disabled={isSubmitting}
+                          />
+                        )}
+
+                        <div className="flex items-center space-x-2 pt-0.5 pl-3">
+                          <Label htmlFor="source-excel" className="text-xs">
+                            From Excel
+                          </Label>
+                          <Switch
+                            id="source-switch"
+                            checked={businessCategorySource === "manual"}
+                            onCheckedChange={(checked) => {
+                              const newSource = checked ? "manual" : "excel";
+                              setBusinessCategorySource(newSource);
+                              if (newSource === "manual") {
+                                const newMappings = { ...columnMappings };
+                                delete newMappings.businessCategory;
+                                setColumnMappings(newMappings);
+                              }
+                            }}
+                            disabled={isSubmitting}
+                          />
+                          <Label htmlFor="source-manual" className="text-xs">
+                            Manual Input
+                          </Label>
+                        </div>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div key={dbCol} className="space-y-1">
+                      <Label htmlFor={`map-${dbCol}`} className="text-sm">
+                        {dbCol.charAt(0).toUpperCase() + dbCol.slice(1)}{" "}
+                        {requiredDbColumns.includes(dbCol) && "*"}
+                      </Label>
+                      <Select
+                        onValueChange={(value) => handleMapChange(dbCol, value)}
+                        value={columnMappings[dbCol] || ""}
+                        disabled={isSubmitting}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue
+                            placeholder={`Pilih kolom untuk ${dbCol}...`}
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {excelColumns.map((excelCol) => (
+                            <SelectItem key={excelCol} value={excelCol}>
+                              {excelCol}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 

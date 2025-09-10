@@ -391,17 +391,17 @@ const AddressTable: React.FC<AddressTableProps> = ({
           ),
       },
       {
-        accessorKey: "businessName",
+        accessorKey: "businessCategory",
         header: ({ column }) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
-            Nama Bisnis
+            Category
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         ),
-        cell: ({ row }) => <div>{row.original.businessName}</div>,
+        cell: ({ row }) => <div>{row.original.businessCategory}</div>,
       },
       {
         accessorKey: "status",
@@ -868,6 +868,15 @@ const AddressTable: React.FC<AddressTableProps> = ({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  onClick={() =>
+                    window.open(
+                      `https://www.google.com/maps/search/${row.getValue(
+                        "address"
+                      )}/@${row.getValue("latitude")},${row.getValue(
+                        "longitude"
+                      )}`
+                    )
+                  }
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>

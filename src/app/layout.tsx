@@ -29,18 +29,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <AuthProvider
-            protectedRoutes={[
-              "/coordinates-generator",
-              "/excel",
-              "/json",
-              "/odp-tools",
-              "/scrape",
-              "/whatsapp",
-              "/wa",
-              "/dashboard",
-            ]}
-          >
+          <AuthProvider protectedRoutes={["/dashboard"]}>
             <DialogProvider>
               {/* <Header /> */}
               <main className="container max-w-screen sm:px4">

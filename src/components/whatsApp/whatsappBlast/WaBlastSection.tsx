@@ -22,6 +22,8 @@ import {
   Settings,
   List,
   Terminal,
+  Database,
+  FileCog,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { v4 as uuidv4 } from "uuid";
@@ -40,6 +42,7 @@ import { UploadZone } from "@/components/UploadZone";
 import {
   ExcelRow,
   WABlastMessageBlock,
+  WABlastMessageLogEntry,
   WABlastMessageType,
   WABlastProgressUpdate,
 } from "@/types";
@@ -52,6 +55,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import ExcelDataManagement from "../address/ExcelDataManagement";
 
 // Deklarasi global untuk library XLSX yang dimuat dari CDN
 declare const XLSX: typeof import("xlsx");
@@ -119,6 +123,46 @@ const WABlastSection: React.FC = () => {
   const [uploadedFileName, setUploadedFileName] = useState<string | undefined>(
     undefined
   );
+  const [logData, setLogData] = useState<WABlastMessageLogEntry[] | null>(null);
+  const [isLogViewerOpen, setIsLogViewerOpen] = useState(false);
+  const [loadingLogs, setLoadingLogs] = useState(false);
+  const [showImporter, setShowImporter] = useState(false);
+
+  const handleViewLog = async (jobId: string) => {
+    setLoadingLogs(true);
+    setIsLogViewerOpen(true);
+    try {
+      const NEXT_PUBLIC_WHATSAPP_SERVER_URL =
+        process.env.NEXT_PUBLIC_SERVER_URL ||
+        "http://localhost:5000/api/whatsapp";
+
+      const response = await fetch(
+        `${NEXT_PUBLIC_WHATSAPP_SERVER_URL}/blast/${jobId}/messages-log`
+      );
+      if (response.ok) {
+        const result = await response.json();
+        // The response has a 'data' property which is the array
+        const processedData = result.data.filter(Boolean); // Filter out null/undefined originalData
+
+        if (processedData.length > 0) {
+          setLogData(processedData);
+        } else {
+          setLogData(null);
+          toast.info("Tidak ada data kontak yang ditemukan di log ini.");
+        }
+      } else {
+        const errorResult = await response.json();
+        toast.error(errorResult.message || "Gagal mengambil log pesan.");
+        setLogData(null);
+      }
+    } catch (error) {
+      console.error("Error fetching blast logs:", error);
+      toast.error("Terjadi kesalahan saat mengambil log.");
+      setLogData(null);
+    } finally {
+      setLoadingLogs(false);
+    }
+  };
 
   // BARU: State lokal untuk pekerjaan yang sedang dibuat
   const [newJobId, setNewJobId] = useState(uuidv4()); // ID unik untuk pekerjaan baru
@@ -510,7 +554,15 @@ const WABlastSection: React.FC = () => {
                           size="sm"
                           onClick={handleEditButton}
                         >
-                          Edit
+                          Lanjutkan
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewLog(job.jobId)}
+                        >
+                          <FileCog className="mr-2 h-4 w-4" />
+                          Proses Log
                         </Button>
                       </>
                     )}
@@ -1123,6 +1175,63 @@ const WABlastSection: React.FC = () => {
             />
           )}
       </CardContent>
+      <Dialog
+        open={isLogViewerOpen}
+        onOpenChange={(isOpen) => {
+          setIsLogViewerOpen(isOpen);
+          if (!isOpen) {
+            setLogData(null);
+            setShowImporter(false);
+          }
+        }}
+      >
+        <DialogContent className="max-w-4/5 min-w-4/5 h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Proses Log Pesan Blast</DialogTitle>
+          </DialogHeader>
+          <div className="flex-grow overflow-hidden">
+            {loadingLogs ? (
+              <div className="flex items-center justify-center h-full">
+                <p>Memuat log...</p>
+              </div>
+            ) : showImporter ? (
+              <div className="h-full overflow-y-auto">
+                <ExcelDataManagement
+                  initialData={logData?.map((row) => ({
+                    ...row,
+                    ...row.originalData,
+                  }))}
+                  hideUploadZone={true}
+                  onDataSubmitted={() => {
+                    toast.success("Data berhasil dikirim untuk diproses!");
+                    setIsLogViewerOpen(false);
+                    setShowImporter(false);
+                  }}
+                />
+              </div>
+            ) : logData && logData.length > 0 ? (
+              <div className="h-full flex flex-col">
+                <div className="py-2">
+                  <Button onClick={() => setShowImporter(true)}>
+                    <Database className="mr-2 h-4 w-4" />
+                    Masukkan ke Database
+                  </Button>
+                </div>
+                <div className="relative flex-grow overflow-auto border rounded-md">
+                  <WABlastMessagesTable
+                    data={logData}
+                    excelColumns={excelColumns}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <p>Tidak ada data log untuk ditampilkan.</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
