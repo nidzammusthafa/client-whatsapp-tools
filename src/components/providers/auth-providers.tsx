@@ -83,7 +83,9 @@ export const AuthProvider = ({
   }
 
   // Cek apakah rute saat ini termasuk rute yang dilindungi
-  const isProtectedRoute = protectedRoutes.includes(pathname);
+  const isProtectedRoute = protectedRoutes.some((route) =>
+    pathname.startsWith(route)
+  );
 
   // Jika ini adalah rute yang dilindungi dan pengguna belum login, tampilkan layar kunci
   if (isProtectedRoute && !isLoggedIn) {
