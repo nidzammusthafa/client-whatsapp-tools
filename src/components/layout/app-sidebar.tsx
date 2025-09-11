@@ -246,7 +246,9 @@ export function AppSidebar() {
 
       <Separator />
       <SidebarFooter>
-        <div className="flex w-full items-center gap-2">
+        <div
+          className={`flex ${!open && "flex-col"} w-full items-center gap-2`}
+        >
           <ThemeToggle />
           <RefreshSocket />
           <LogoutButton />

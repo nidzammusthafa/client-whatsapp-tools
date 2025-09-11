@@ -161,7 +161,7 @@ export default function PreviewLayout({
   return (
     <SidebarProvider defaultOpen={false}>
       <PreviewSidebar />
-      <SidebarTrigger className="fixed z-50" />
+      <SidebarTrigger className="fixed z-50 sm:left-14" />
       <div className="flex min-h-screen w-screen max-w-screen overflow-x-hidden content-center">
         <main className="flex-1 overflow-auto">{children}</main>
       </div>
