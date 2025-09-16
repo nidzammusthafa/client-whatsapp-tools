@@ -141,6 +141,7 @@ const WABlastSection: React.FC = () => {
       );
       if (response.ok) {
         const result = await response.json();
+        console.log(result);
         // The response has a 'data' property which is the array
         const processedData = result.data.filter(Boolean); // Filter out null/undefined originalData
 

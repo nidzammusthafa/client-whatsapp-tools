@@ -95,9 +95,6 @@ const ExcelDataManagement: React.FC<ExcelDataManagementProps> = ({
       setExcelData(initialData);
       setExcelColumns(headers);
       setUploadedFile(new File([], "Pre-loaded Data"));
-      toast.success(
-        "Data berhasil dimuat. Silakan petakan kolom untuk disimpan."
-      );
     }
   }, [initialData]);
 
@@ -166,7 +163,9 @@ const ExcelDataManagement: React.FC<ExcelDataManagementProps> = ({
       if (Object.keys(newMappings).length > 0) {
         setColumnMappings(newMappings);
         toast.info(
-          `${Object.keys(newMappings).length} kolom berhasil dipetakan secara otomatis.`
+          `${
+            Object.keys(newMappings).length
+          } kolom berhasil dipetakan secara otomatis.`
         );
       }
     };
