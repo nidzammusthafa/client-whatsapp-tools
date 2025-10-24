@@ -15,7 +15,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { ListPlus, Play, PlusCircle, PowerOff } from "lucide-react";
+import { ListPlus, Play, PlusCircle, PowerOff, RefreshCw } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -48,6 +48,8 @@ const ClientListSection: React.FC = () => {
     disconnectClient,
     disconnectAllClients,
     initializeMultipleClients,
+    resetWhatsAppAccountMessageCount,
+    resetAllWhatsAppAccountMessageCounts,
   } = useWhatsAppStore();
 
   const [showRunInactiveDialog, setShowRunInactiveDialog] = useState(false);
@@ -58,6 +60,10 @@ const ClientListSection: React.FC = () => {
   const handleDisconnectAllClients = () => {
     disconnectAllClients();
   };
+  const handleResetAllMessageCount = () => {
+    resetAllWhatsAppAccountMessageCounts();
+  };
+
   useEffect(() => {
     setIsLoginDialogOpen(false);
   }, [clients]);
@@ -196,6 +202,47 @@ const ClientListSection: React.FC = () => {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+          <AlertDialog>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="flex-grow sm:flex-grow-0"
+                    disabled={
+                      clients.filter(
+                        (c) =>
+                          c.outgoingMsgs24h !== undefined &&
+                          c.outgoingMsgs24h > 0
+                      ).length === 0
+                    }
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                </AlertDialogTrigger>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Reset Jumlah Pesan Terkirim</p>
+              </TooltipContent>
+            </Tooltip>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  Konfirmasi Reset Semua Jumlah Pesan Terkirim
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  Apakah Anda yakin ingin mereset jumlah pesan terkirim
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Batal</AlertDialogCancel>
+                <AlertDialogAction onClick={handleResetAllMessageCount}>
+                  Reset Jumlah Pesan Terkirim
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
 
           {/* Tombol Jalankan Klien (yang belum aktif) */}
           <Dialog
@@ -279,6 +326,9 @@ const ClientListSection: React.FC = () => {
                 onDeleteClient={deleteClient}
                 onDisconnectClient={disconnectClient}
                 onSetAsMain={setClientAsMain}
+                onResetWhatsAppAccountMessageCount={
+                  resetWhatsAppAccountMessageCount
+                }
               />
             ))}
           </div>

@@ -348,6 +348,66 @@ export const createClientManagerSlice: StateCreator<
     });
   },
 
+  resetWhatsAppAccountMessageCount: async (accountId) => {
+    try {
+      const response = await fetch(
+        `${NEXT_PUBLIC_WHATSAPP_SERVER_URL}/client/reset-message-count/${accountId}`,
+        {
+          method: "POST",
+        }
+      );
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message);
+      }
+
+      get().resetGlobalError();
+      // Optimistic update: Perbarui di frontend segera
+      set((state) => {
+        const updatedClients = state.clients.map((client) => ({
+          ...client,
+          outgoingMsgs24h: 0,
+        }));
+        return { clients: updatedClients };
+      });
+      toast.success(
+        `Berhasil mereset jumlah pesan terkirim dari akun ${accountId}`
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      toast.error(error.message || "Gagal mereset jumlah pesan terkirim.");
+    }
+  },
+
+  resetAllWhatsAppAccountMessageCounts: async () => {
+    try {
+      const response = await fetch(
+        `${NEXT_PUBLIC_WHATSAPP_SERVER_URL}/client/reset-all-message-counts`,
+        {
+          method: "POST",
+        }
+      );
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message);
+      }
+
+      get().resetGlobalError();
+      // Optimistic update: Perbarui di frontend segera
+      set((state) => {
+        const updatedClients = state.clients.map((client) => ({
+          ...client,
+          outgoingMsgs24h: 0,
+        }));
+        return { clients: updatedClients };
+      });
+      toast.success("Berhasil mereset jumlah pesan terkirim semua akun");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      toast.error(error.message || "Gagal mereset jumlah pesan terkirim.");
+    }
+  },
+
   deleteClient: (accountId) => {
     const socket = getWhatsappSocket();
     if (!get().isSocketConnected) {

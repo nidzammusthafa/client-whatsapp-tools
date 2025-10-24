@@ -16,6 +16,7 @@ import {
   Star,
   Info,
   ScanQrCode,
+  RefreshCw,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -54,6 +55,7 @@ interface ClientStatusItemProps {
   onDeleteClient: (accountId: string) => void;
   onDisconnectClient: (accountId: string) => void;
   onSetAsMain: (accountId: string) => void;
+  onResetWhatsAppAccountMessageCount: (accountId: string) => void;
 }
 
 const ClientStatusItem: React.FC<ClientStatusItemProps> = ({
@@ -64,6 +66,7 @@ const ClientStatusItem: React.FC<ClientStatusItemProps> = ({
   onDeleteClient,
   onDisconnectClient,
   onSetAsMain,
+  onResetWhatsAppAccountMessageCount,
 }) => {
   const [isHeadless, setIsHeadless] = useState<boolean>(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
@@ -156,6 +159,10 @@ const ClientStatusItem: React.FC<ClientStatusItemProps> = ({
 
   const handleLogoutClient = () => {
     onLogout(client.accountId);
+  };
+
+  const handleResetMessageCount = () => {
+    onResetWhatsAppAccountMessageCount(client.accountId);
   };
 
   const handleNewAccountIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -455,6 +462,44 @@ const ClientStatusItem: React.FC<ClientStatusItemProps> = ({
                     <AlertDialogCancel>Batal</AlertDialogCancel>
                     <AlertDialogAction onClick={handleLogoutClient}>
                       Logout
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+
+              <AlertDialog>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-grow sm:flex-grow-0"
+                        disabled={client.outgoingMsgs24h === 0}
+                      >
+                        <RefreshCw className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Reset Pesan Terkirim</p>
+                  </TooltipContent>
+                </Tooltip>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      Apakah Anda Yakin Ingin Mereset Jumlah Pesan Terkirim?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Tindakan ini akan mereset jumlah pesan yang dikirim oleh
+                      klien &apos;
+                      {client.accountId}&apos; ke 0.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Batal</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleResetMessageCount}>
+                      Reset
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>

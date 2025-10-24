@@ -36,6 +36,8 @@ export interface ClientActions {
   loginClient: (accountId: string, headless: boolean) => void;
   logoutClient: (accountId: string) => void;
   renameClient: (oldAccountId: string, newAccountId: string) => void;
+  resetWhatsAppAccountMessageCount: (accountId: string) => void;
+  resetAllWhatsAppAccountMessageCounts: () => void;
   deleteClient: (accountId: string) => void;
   disconnectClient: (accountId: string) => void;
   disconnectAllClients: () => void;
