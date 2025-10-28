@@ -29,10 +29,12 @@ interface WABlastJobControlsProps {
   delayAfterNRecipientsSeconds: number;
   uploadedFileName: string | undefined;
   scheduledAt: Date | undefined;
+  skipRecipientsInAddress: boolean;
   handleStartBlast: (
     newJobId: string,
     selectedSenderAccountIds: string[],
     messageBlocks: WABlastMessageBlock[],
+    skipRecipientsInAddress: boolean,
     delayConfig: {
       minDelayMs: number;
       maxDelayMs: number;
@@ -67,6 +69,7 @@ const WABlastJobControls: React.FC<WABlastJobControlsProps> = ({
   delayAfterNRecipientsSeconds,
   uploadedFileName,
   scheduledAt,
+  skipRecipientsInAddress,
   handleStartBlast,
   handlePauseResumeStop,
 }) => {
@@ -120,6 +123,7 @@ const WABlastJobControls: React.FC<WABlastJobControlsProps> = ({
                 newJobId,
                 selectedSenderAccountIds,
                 messageBlocks,
+                skipRecipientsInAddress,
                 {
                   minDelayMs: minDelay,
                   maxDelayMs: maxDelay,

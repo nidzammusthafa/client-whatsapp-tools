@@ -27,6 +27,7 @@ export const useWABlastActions = () => {
     newJobId: string,
     selectedSenderAccountIds: string[],
     messageBlocks: WABlastMessageBlock[],
+    skipRecipientsInAddress: boolean,
     delayConfig: {
       minDelayMs: number;
       maxDelayMs: number;
@@ -121,6 +122,7 @@ export const useWABlastActions = () => {
       uploadedExcelData,
       selectedPhoneNumberColumn,
       messageBlocks,
+      skipRecipientsInAddress,
       delayConfig,
       uploadedFileName,
       scheduledAt

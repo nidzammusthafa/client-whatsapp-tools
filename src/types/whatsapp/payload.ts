@@ -132,6 +132,7 @@ export interface StartWABlastPayload {
   maxDelayMs: number;
   delayAfterNRecipients: number; // Jeda setelah N penerima
   delayAfterNRecipientsMs: number; // Durasi jeda setelah N penerima
+  skipRecipientsInAddress: boolean; // Lewati nomor yang sudah ada di Address
   enableWhatsappWarmer?: boolean; // Apakah fitur inter-account chat diaktifkan
   whatsappWarmerMinMessages?: number; // Minimum pesan untuk inter-account chat
   whatsappWarmerMaxMessages?: number; // Maksimum pesan untuk inter-account chat

@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switchs";
 import { toast } from "sonner";
 import {
   Pause,
@@ -127,6 +128,8 @@ const WABlastSection: React.FC = () => {
   const [isLogViewerOpen, setIsLogViewerOpen] = useState(false);
   const [loadingLogs, setLoadingLogs] = useState(false);
   const [showImporter, setShowImporter] = useState(false);
+  const [skipRecipientsInAddress, setSkipRecipientsInAddress] =
+    useState<boolean>(true);
 
   const handleViewLog = async (jobId: string) => {
     setLoadingLogs(true);
@@ -197,6 +200,9 @@ const WABlastSection: React.FC = () => {
         setWhatsappWarmerMinDelayMs(currentJob.whatsappWarmerMinDelayMs!);
         setWhatsappWarmerMaxDelayMs(currentJob.whatsappWarmerMaxDelayMs!);
         setWhatsappWarmerLanguage(currentJob.whatsappWarmerLanguage!);
+        setSkipRecipientsInAddress(
+          currentJob.skipRecipientsInAddress ?? true
+        );
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -252,6 +258,7 @@ const WABlastSection: React.FC = () => {
             setOriginalData(null);
             setExcelColumns([]);
             setSelectedPhoneNumberColumn("");
+            setSkipRecipientsInAddress(true);
             return;
           }
 
@@ -270,6 +277,7 @@ const WABlastSection: React.FC = () => {
           setExcelColumns([]);
           setSelectedPhoneNumberColumn("");
           setUploadedFileName(undefined);
+          setSkipRecipientsInAddress(true);
         }
       };
       reader.readAsArrayBuffer(file);
@@ -460,6 +468,7 @@ const WABlastSection: React.FC = () => {
       uploadedExcelData,
       selectedPhoneNumberColumn,
       messageBlocks,
+      skipRecipientsInAddress,
       delayConfig,
       uploadedFileName,
       scheduledAt
@@ -530,6 +539,12 @@ const WABlastSection: React.FC = () => {
                       ? "Job dibatalkan karena server restart."
                       : job.message}
                   </p>
+                  <p className="text-xs text-muted-foreground">
+                    Filter Address:{" "}
+                    {job.skipRecipientsInAddress === false
+                      ? "Nonaktif"
+                      : "Aktif"}
+                  </p>
                   <div className="flex justify-end gap-2 mt-2">
                     {job.status !== "IN_PROGRESS" && (
                       <>
@@ -587,7 +602,10 @@ const WABlastSection: React.FC = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setCurrentSelectedWABlastJobId(null)}
+              onClick={() => {
+                setCurrentSelectedWABlastJobId(null);
+                setSkipRecipientsInAddress(true);
+              }}
             >
               <Plus className="mr-2 h-4 w-4" /> Buat Pekerjaan Baru
             </Button>
@@ -685,7 +703,10 @@ const WABlastSection: React.FC = () => {
                 </div>
                 <Button
                   variant="outline"
-                  onClick={() => setOriginalData(null)}
+                  onClick={() => {
+                    setOriginalData(null);
+                    setSkipRecipientsInAddress(true);
+                  }}
                   className="mt-4 md:mt-0"
                 >
                   <FilePlus className="mr-2 h-4 w-4" />
@@ -740,6 +761,31 @@ const WABlastSection: React.FC = () => {
                     Jadwalkan Blast (Opsional)
                   </Label>
                   <DatePicker date={scheduledAt} setDate={setScheduledAt} />
+                </div>
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="skip-recipients-toggle"
+                    className="text-foreground"
+                  >
+                    Filter Nomor Address
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      id="skip-recipients-toggle"
+                      checked={!!skipRecipientsInAddress}
+                      onCheckedChange={(checked) =>
+                        setSkipRecipientsInAddress(Boolean(checked))
+                      }
+                      disabled={isBlastRunning}
+                    />
+                    <span className="text-sm text-muted-foreground">
+                      {skipRecipientsInAddress ? "Aktif" : "Nonaktif"}
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Saat aktif, nomor yang sudah ada di Address tidak akan
+                    dikirimi ulang.
+                  </p>
                 </div>
               </div>
             )}
@@ -1158,13 +1204,21 @@ const WABlastSection: React.FC = () => {
             )}
         </div>
 
-        {currentJob && (
-          <Alert variant="default">
-            <Terminal />
-            <AlertTitle>Status Pekerjaan</AlertTitle>
-            <AlertDescription>{currentJob.message}</AlertDescription>
-          </Alert>
-        )}
+      {currentJob && (
+        <Alert variant="default">
+          <Terminal />
+          <AlertTitle>Status Pekerjaan</AlertTitle>
+          <AlertDescription>{currentJob.message}</AlertDescription>
+        </Alert>
+      )}
+      {currentJob && (
+        <p className="text-sm text-muted-foreground">
+          Filter Address:{" "}
+          {currentJob.skipRecipientsInAddress === false
+            ? "Nonaktif"
+            : "Aktif"}
+        </p>
+      )}
 
         {/* Komponen Tabel Log Pesan Terkirim */}
         {currentJob &&

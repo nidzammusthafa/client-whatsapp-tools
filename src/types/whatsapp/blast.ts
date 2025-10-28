@@ -89,6 +89,7 @@ export interface WABlastProgressUpdate {
   phoneNumberColumn?: string;
   fileName?: string;
   scheduledAt?: string; // ISO string
+  skipRecipientsInAddress?: boolean;
   messageBlocks?: WABlastMessageBlock[];
   messages?: WABlastMessageLogEntry[]; // Log pesan yang sudah terkirim
 }

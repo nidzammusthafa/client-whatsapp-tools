@@ -41,7 +41,19 @@ export const createWaBlastManagerSlice: StateCreator<
   setWarmerJobId: (value) => set({ warmerJobId: value }),
 
   // Actions for WA Blast
-  setWaBlastJobs: (jobs) => set({ waBlastJobs: jobs }),
+  setWaBlastJobs: (jobs) =>
+    set({
+      waBlastJobs: Object.fromEntries(
+        Object.entries(jobs).map(([jobId, job]) => [
+          jobId,
+          {
+            ...job,
+            skipRecipientsInAddress:
+              job.skipRecipientsInAddress ?? true,
+          },
+        ])
+      ),
+    }),
   updateWaBlastJobStatus: (statusUpdate) =>
     set((state) => {
       const updatedJobs = { ...state.waBlastJobs };
@@ -54,11 +66,19 @@ export const createWaBlastManagerSlice: StateCreator<
 
         updatedJobs[jobId] = {
           ...existingJob,
-          ...restOfUpdate, // Timpa hanya dengan data progres, bukan log pesan
+          ...restOfUpdate,
+          skipRecipientsInAddress:
+            restOfUpdate.skipRecipientsInAddress ??
+            existingJob.skipRecipientsInAddress ??
+            true,
         };
       } else {
         // Jika pekerjaan belum ada di state, buat dari data pembaruan
-        updatedJobs[jobId] = statusUpdate;
+        updatedJobs[jobId] = {
+          ...statusUpdate,
+          skipRecipientsInAddress:
+            statusUpdate.skipRecipientsInAddress ?? true,
+        };
       }
       return { waBlastJobs: updatedJobs };
     }),
@@ -82,6 +102,7 @@ export const createWaBlastManagerSlice: StateCreator<
     excelData,
     phoneNumberColumn,
     messageBlocks,
+    skipRecipientsInAddress,
     delayConfig,
     fileName,
     scheduledAt
@@ -132,6 +153,7 @@ export const createWaBlastManagerSlice: StateCreator<
           fileName: fileName,
           scheduledAt: scheduledAt as unknown as string,
           messageBlocks: messageBlocks,
+          skipRecipientsInAddress,
         },
       },
       currentSelectedWABlastJobId: jobId,
@@ -143,6 +165,7 @@ export const createWaBlastManagerSlice: StateCreator<
       excelData,
       phoneNumberColumn,
       messageBlocks,
+      skipRecipientsInAddress,
       ...delayConfig,
       fileName,
       scheduledAt,

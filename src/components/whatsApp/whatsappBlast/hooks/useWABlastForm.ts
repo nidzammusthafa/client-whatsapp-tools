@@ -45,6 +45,8 @@ export const useWABlastForm = () => {
   const [uploadedFileName, setUploadedFileName] = useState<string | undefined>(
     undefined
   );
+  const [skipRecipientsInAddress, setSkipRecipientsInAddress] =
+    useState<boolean>(true);
 
   const handleFileUpload = useCallback(
     (files: File[] | File) => {
@@ -182,6 +184,7 @@ export const useWABlastForm = () => {
     setWhatsappWarmerMaxMessages(jobToEdit.whatsappWarmerMaxMessages || 0);
     setWhatsappWarmerDelayMs(jobToEdit.whatsappWarmerDelayMs! || 0);
     setWhatsappWarmerLanguage(jobToEdit.whatsappWarmerLanguage || "en");
+    setSkipRecipientsInAddress(jobToEdit.skipRecipientsInAddress ?? true);
 
     setNewJobId(jobToEdit.jobId);
     // setCurrentSelectedWABlastJobId(null); // Return to "create" mode
@@ -218,6 +221,7 @@ export const useWABlastForm = () => {
     waBlastJobs,
     currentSelectedWABlastJobId,
     isSocketConnected,
+    skipRecipientsInAddress,
     // Setters
     setNewJobId,
     setSelectedSenderAccountIds,
@@ -231,6 +235,7 @@ export const useWABlastForm = () => {
     setActiveTab,
     setScheduledAt,
     setUploadedFileName,
+    setSkipRecipientsInAddress,
 
     // Handlers
     handleFileUpload,

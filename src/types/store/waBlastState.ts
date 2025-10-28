@@ -32,6 +32,7 @@ export interface WaBlastActions {
     excelData: ExcelRow[],
     phoneNumberColumn: string,
     messageBlocks: WABlastMessageBlock[],
+    skipRecipientsInAddress: boolean,
     delayConfig: {
       minDelayMs: number;
       maxDelayMs: number;
